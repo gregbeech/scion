@@ -20,5 +20,12 @@ class MyApp < Scion::Base
 end
 ```
 
+To run it and start messing around just do:
+
+```
+$ bundle install
+$ bundle exec shotgun
+```
+
 
 [spray]: http://spray.io/ "spray"
