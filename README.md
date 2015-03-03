@@ -2,7 +2,7 @@
 
 A Ruby HTTP framework inspired by [Spray][spray].
 
-This is a just-for-fun proof of concept to see if it's possible to create a Spray-like routing DSL in Ruby, and to see whether it would feel "Rubyish".
+This is a just-for-fun proof of concept to see if it's possible to create a Spray-like routing DSL in Ruby, and to see whether it would feel "Rubyish". It's tiny (~200 lines) but does work, albeit synchronously rather than asynchronously like spray.
 
 A basic app looks something like this:
 

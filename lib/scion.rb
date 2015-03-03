@@ -4,15 +4,26 @@ require "scion/routing"
 
 module Scion
 
-  module Rejections
+  class Rejection
     PATH = "PATH"
     METHOD = "METHOD"
+
+    attr_reader :reason, :info
+
+    def initialize(reason, info = {})
+      @reason = reason
+      @info = info
+    end
+
+    def to_s
+      "Rejection(#{reason})"
+    end
   end
 
   class Result
     EMPTY = Result.new
 
-    class Accept < Result
+    class Complete < Result
       attr_reader :status, :headers, :body
 
       def initialize(status, headers, body)
@@ -31,19 +42,20 @@ module Scion
     end
 
     class Reject < Result
-      attr_reader :reason, :info
+      attr_reader :rejections
 
-      def initialize(reason, info = {})
-        @reason = reason
-        @info = info
+      def initialize(*rejections)
+        @rejections = rejections
       end
 
-      def rejection?
+      def reject?
         true
       end
 
+      def
+
       def to_s
-        "Result::Reject(#{reason}"
+        "Result::Reject(#{rejections.map { |r| r.reason }.join(", ")}"
       end
     end
 
@@ -51,7 +63,7 @@ module Scion
       false
     end
 
-    def rejection?
+    def reject?
       false
     end
 
@@ -68,7 +80,7 @@ module Scion
         "Content-Length" => body.size.to_s,
         "Content-Type" => "application/json"
       }
-      Result::Accept.new(status, headers, body)
+      Result::Complete.new(status, headers, body)
     end
 
   end
@@ -100,7 +112,7 @@ module Scion
 
       begin
         catch (:complete) { route }
-        @result = handle_rejections(@result) if @result.rejection?
+        @result = handle_rejections(@result) if @result.reject?
       rescue => e
         @result = handle_errors(e)
       end
@@ -109,14 +121,15 @@ module Scion
     end
 
     def handle_errors(e)
-      puts "ERROR: #{e}"
+      puts "handle_errors: #{e}"
       @result = Result.error(500)
     end
 
     def handle_rejections(reject)
-      case reject.reason
-      when Rejections::PATH then Result.error(404)
-      when Rejections::METHOD then Result.error(405)
+      puts "handle_rejections: #{reject.rejections}"
+      case reject.rejections.first.reason
+      when Rejection::PATH then Result.error(404)
+      when Rejection::METHOD then Result.error(405)
       else Result.error(500)
       end
     end
