@@ -14,10 +14,6 @@ module Scion
       @reason = reason
       @info = info
     end
-
-    def to_s
-      "Rejection(#{reason})"
-    end
   end
 
   class Result
@@ -35,10 +31,6 @@ module Scion
       def complete?
         true
       end
-
-      def to_s
-        "Result::Complete(#{status})"
-      end
     end
 
     class Reject < Result
@@ -51,12 +43,6 @@ module Scion
       def reject?
         true
       end
-
-      def
-
-      def to_s
-        "Result::Reject(#{rejections.map { |r| r.reason }.join(", ")}"
-      end
     end
 
     def complete?
@@ -65,10 +51,6 @@ module Scion
 
     def reject?
       false
-    end
-
-    def to_s
-      "Result::EMPTY"
     end
 
     def self.error(status, developer_message = nil)
@@ -85,18 +67,27 @@ module Scion
 
   end
 
-  class Request < Rack::Request
+  class Request
+    attr_accessor :unmatched_path
+
+    def initialize(rack_req)
+      @rack_req = rack_req
+      @unmatched_path = rack_req.path
+    end
+
+    def request_method
+      @rack_req.request_method.downcase.to_sym
+    end
+
+    def form_hash
+      @rack_req.POST
+    end
   end
 
   class Base
-    include Rack::Utils
-    include Scion::Routing
+    include Scion::Routing::Directives
 
     attr_reader :request, :result
-
-    def set_result(r)
-      @result = r
-    end
 
     def route
       raise NotImplementedError.new
@@ -107,22 +98,22 @@ module Scion
     end
 
     def call!(env)
-      @request = Request.new(env)
+      @request = Request.new(Rack::Request.new(env))
       @result = Result::EMPTY
 
       begin
         catch (:complete) { route }
         @result = handle_rejections(@result.rejections) if @result.reject?
       rescue => e
-        @result = handle_errors(e)
+        @result = handle_error(e)
       end
 
       @result = Result.error(501, "The routing tree is incomplete") unless result.complete?
       [@result.status, @result.headers, [@result.body]]
     end
 
-    def handle_errors(e)
-      puts "handle_errors: #{e}"
+    def handle_error(e)
+      puts "handle_error: #{e}"
       @result = Result.error(500)
     end
 
@@ -133,6 +124,12 @@ module Scion
       when Rejection::METHOD then Result.error(405)
       else Result.error(500)
       end
+    end
+
+    private
+
+    def set_result(result)
+      @result = result
     end
 
   end

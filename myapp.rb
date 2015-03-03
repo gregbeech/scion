@@ -13,9 +13,16 @@ class MyApp < Scion::Base
         end
       end
     end
-    path %r{^/users/([0-9]+)$} do |user_id|
-      get do
-        complete 200, { user_id: user_id }
+    path_prefix "/users" do
+      path_end do
+        get do
+          complete 200, [{ user_id: 123 }, { user_id: 456 }]
+        end
+      end
+      path "/([0-9]+)" do |user_id|
+        get do
+          complete 200, { user_id: user_id }
+        end
       end
     end
   end
