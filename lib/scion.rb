@@ -71,10 +71,10 @@ module Scion
       "Result::EMPTY"
     end
 
-    def self.error(status)
+    def self.error(status, developer_message = nil)
       body = { 
         status: status, 
-        developer_message: Rack::Utils::HTTP_STATUS_CODES[status]
+        developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]
       }.to_json
       headers = { 
         "Content-Length" => body.size.to_s,
@@ -112,11 +112,12 @@ module Scion
 
       begin
         catch (:complete) { route }
-        @result = handle_rejections(@result) if @result.reject?
+        @result = handle_rejections(@result.rejections) if @result.reject?
       rescue => e
         @result = handle_errors(e)
       end
 
+      @result = Result.error(501, "The routing tree is incomplete") unless result.complete?
       [@result.status, @result.headers, [@result.body]]
     end
 
@@ -125,9 +126,9 @@ module Scion
       @result = Result.error(500)
     end
 
-    def handle_rejections(reject)
-      puts "handle_rejections: #{reject.rejections}"
-      case reject.rejections.first.reason
+    def handle_rejections(rejections)
+      puts "handle_rejections: #{rejections}"
+      case rejections.first.reason
       when Rejection::PATH then Result.error(404)
       when Rejection::METHOD then Result.error(405)
       else Result.error(500)
