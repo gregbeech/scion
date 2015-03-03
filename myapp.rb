@@ -2,17 +2,21 @@ require "scion"
 
 class MyApp < Scion::Base
 
-  route do
+  def route
     path "/" do
       get do
-        complete 200, { wow: "You got stuff" }
+        complete 200, { hello: "World" }
       end
       post do
-        complete 201, { cool: "You created stuff" }
+      	form_hash do |form|
+          complete 201, { created: "OK" }.merge(form)
+        end
       end
     end
-    path %r{^/([a-z]+)$} do |s|
-      complete 200, { s => "bar" }
+    path %r{^/users/([0-9]+)$} do |user_id|
+      get do
+        complete 200, { user_id: user_id }
+      end
     end
   end
 

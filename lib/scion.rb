@@ -10,6 +10,7 @@ module Scion
   end
 
   class Result
+    EMPTY = Result.new
 
     class Accept < Result
       attr_reader :status, :headers, :body
@@ -20,12 +21,12 @@ module Scion
         @body = body
       end
 
-      def rejection?
-        false
+      def complete?
+        true
       end
 
-      def to_rack
-        [@status, @headers, [@body]]
+      def to_s
+        "Result::Complete(#{status})"
       end
     end
 
@@ -40,6 +41,22 @@ module Scion
       def rejection?
         true
       end
+
+      def to_s
+        "Result::Reject(#{reason}"
+      end
+    end
+
+    def complete?
+      false
+    end
+
+    def rejection?
+      false
+    end
+
+    def to_s
+      "Result::EMPTY"
     end
 
     def self.error(status)
@@ -59,39 +76,18 @@ module Scion
   class Request < Rack::Request
   end
 
-  class Response < Rack::Response
-  end
-
-  ###########################################################################
-
-  class Runner
-    def initialize(delegate)
-      @delegate = delegate
-    end
-
-    def run(&block)
-      instance_eval &block
-    end
-
-    def method_missing(method, *args, &block)
-      @delegate.send(method, *args, &block)
-    end
-  end
-
   class Base
     include Rack::Utils
     include Scion::Routing
 
-    attr_reader :request
+    attr_reader :request, :result
 
     def set_result(r)
       @result = r
     end
 
-    class << self
-      def route(&block)   
-        @@route = block
-      end
+    def route
+      raise NotImplementedError.new
     end
 
     def call(env)
@@ -100,15 +96,25 @@ module Scion
 
     def call!(env)
       @request = Request.new(env)
-      @response = Response.new
+      @result = Result::EMPTY
 
-      catch (:complete) { Runner.new(self).run(&@@route) }
-      @result = handle_rejections if @result.rejection?
-      @result.to_rack
+      begin
+        catch (:complete) { route }
+        @result = handle_rejections(@result) if @result.rejection?
+      rescue => e
+        @result = handle_errors(e)
+      end
+
+      [@result.status, @result.headers, [@result.body]]
     end
 
-    def handle_rejections
-      case @result.reason
+    def handle_errors(e)
+      puts "ERROR: #{e}"
+      @result = Result.error(500)
+    end
+
+    def handle_rejections(reject)
+      case reject.reason
       when Rejections::PATH then Result.error(404)
       when Rejections::METHOD then Result.error(405)
       else Result.error(500)

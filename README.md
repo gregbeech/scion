@@ -8,15 +8,25 @@ A basic app looks something like this:
 
 ```ruby
 class MyApp < Scion::Base
-  route {
-    path("/") {
-      get {
-        complete(200, "You got stuff")
-      }.or post {
-        complete(201, "You created stuff")
-      }
-    }
-  }
+
+  def route
+    path "/" do
+      get do
+        complete 200, { hello: "World" }
+      end
+      post do
+        form_hash do |form|
+          complete 201, { created: "OK" }.merge(form)
+        end
+      end
+    end
+    path %r{^/users/([0-9]+)$} do |user_id|
+      get do
+        complete 200, { user_id: user_id }
+      end
+    end
+  end
+
 end
 ```
 
