@@ -4,17 +4,57 @@ require "scion/routing"
 
 module Scion
 
-  class Rejection; end
-
-  class PathRejection < Rejection; end
-
-  class MethodRejection < Rejection
-    def initialize(supported)
-      @supported = supported
-    end
+  module Rejections
+    PATH = "PATH"
+    METHOD = "METHOD"
   end
 
-  ###########################################################################
+  class Result
+
+    class Accept < Result
+      attr_reader :status, :headers, :body
+
+      def initialize(status, headers, body)
+        @status = status
+        @headers = headers
+        @body = body
+      end
+
+      def rejection?
+        false
+      end
+
+      def to_rack
+        [@status, @headers, [@body]]
+      end
+    end
+
+    class Reject < Result
+      attr_reader :reason, :info
+
+      def initialize(reason, info = {})
+        @reason = reason
+        @info = info
+      end
+
+      def rejection?
+        true
+      end
+    end
+
+    def self.error(status)
+      body = { 
+        status: status, 
+        developer_message: Rack::Utils::HTTP_STATUS_CODES[status]
+      }.to_json
+      headers = { 
+        "Content-Length" => body.size.to_s,
+        "Content-Type" => "application/json"
+      }
+      Result::Accept.new(status, headers, body)
+    end
+
+  end
 
   class Request < Rack::Request
   end
@@ -24,15 +64,33 @@ module Scion
 
   ###########################################################################
 
+  class Runner
+    def initialize(delegate)
+      @delegate = delegate
+    end
+
+    def run(&block)
+      instance_eval &block
+    end
+
+    def method_missing(method, *args, &block)
+      @delegate.send(method, *args, &block)
+    end
+  end
+
   class Base
     include Rack::Utils
-    extend Scion::Routing
+    include Scion::Routing
+
+    attr_reader :request
+
+    def set_result(r)
+      @result = r
+    end
 
     class << self
-      attr_reader :routes
-
-      def route     
-        (@routes ||= []) << yield
+      def route(&block)   
+        @@route = block
       end
     end
 
@@ -41,40 +99,20 @@ module Scion
     end
 
     def call!(env)
-      request = Request.new(env)
-      response = Response.new
+      @request = Request.new(env)
+      @response = Response.new
 
-      result = []
-      self.class.routes.each do |route|
-        result = route.call(request, response)
-        return result unless Routing.is_rejection?(result)
-      end
-
-      handle_rejections(result)
+      catch (:complete) { Runner.new(self).run(&@@route) }
+      @result = handle_rejections if @result.rejection?
+      @result.to_rack
     end
 
-    def handle_rejections(rejections)
-      primary = rejections.first
-      case primary
-      when PathRejection then error(404)
-      when MethodRejection then error(405)
-      else error(500)
+    def handle_rejections
+      case @result.reason
+      when Rejections::PATH then Result.error(404)
+      when Rejections::METHOD then Result.error(405)
+      else Result.error(500)
       end
-    end
-
-    private
-
-    # TODO: This properly
-    def error(status)
-      payload = { 
-        status: status, 
-        developer_message: Rack::Utils::HTTP_STATUS_CODES[status]
-      }.to_json
-      headers = { 
-        "Content-Length" => payload.size.to_s,
-        "Content-Type" => "application/json"
-      }
-      [status, headers, [payload]]
     end
 
   end
