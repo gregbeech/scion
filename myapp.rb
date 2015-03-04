@@ -3,11 +3,11 @@ require 'scion'
 class MyApp < Scion::Base
 
   def route
-    provides :json, :xml do |respond_with|
+    provides :json, :xml do |response_type|
       path '/' do
         get do        
           query_hash do |query|
-            complete 200, { hello: 'World', respond_with: respond_with }.merge(query)
+            complete 200, { hello: 'World', response_type: response_type }.merge(query)
           end
         end
         post do

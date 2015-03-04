@@ -3,24 +3,39 @@ module Scion
 
     module RouteDirectives
       def complete(status, body)
-        set_result Result::Complete.new(status, { 'Content-Type' => 'application/json' }, body.to_json)
+        context.result = Result::Complete.new(status, { 'Content-Type' => 'application/json' }, body.to_json)
         throw :complete
       end
 
       def reject(rejection)
-        if result.reject?
-          result.rejections << rejection unless rejection.nil?
+        if context.result.reject?
+          context.result.rejections << rejection unless rejection.nil?
         else
-          set_result Result::Reject.new(rejection)
+          context.result = Result::Reject.new(rejection)
+        end
+      end
+
+      def extract(lambda)
+        yield lambda.call(context)
+      end
+
+      def extract_request(lambda = nil)
+        yield lambda ? lambda.call(context.request) : context.request
+      end
+
+      def modify_request(lambda)
+        context.branch do
+          lambda.call(context.request)
+          yield
         end
       end
     end
 
     module HeaderDirectives
-      def header(name, &inner)
+      def header(name)
         optional_header(name) do |value|
           if value
-            inner.call(value)
+            yield value
           else
             reject(Rejection.new(Rejection::HEADER, { required: name }))
           end
@@ -28,7 +43,9 @@ module Scion
       end
 
       def optional_header(name)
-        yield request.header(name)
+        extract_request do |request|
+          yield request.header(name)
+        end
       end
 
       def provides(*media_types)
@@ -64,10 +81,12 @@ module Scion
       include RouteDirectives
 
       def request_method(method)
-        if request.request_method == method
-          yield
-        else
-          reject(Rejection.new(Rejection::METHOD, { supported: method }))
+        extract_request do |request|
+          if request.request_method == method
+            yield
+          else
+            reject(Rejection.new(Rejection::METHOD, { supported: method }))
+          end
         end
       end
 
@@ -80,11 +99,15 @@ module Scion
 
     module ParamDirectives
       def form_hash
-        yield request.form_hash
+        extract_request do |request|
+          yield request.form_hash
+        end
       end
 
       def query_hash
-        yield request.query_hash
+        extract_request do |request|
+          yield request.query_hash
+        end
       end
     end
 
@@ -92,16 +115,16 @@ module Scion
       include RouteDirectives
 
       def path_prefix(pattern)
-        path = request.unmatched_path
-        match = path.match(pattern)
-        if match && match.pre_match == ''
-          request.unmatched_path = match.post_match
-          yield *match.captures
-        else
-          reject(nil) # path rejections are nil to allow more specific rejections to be seen
+        extract_request do |request|
+          match = request.unmatched_path.match(pattern)
+          if match && match.pre_match == ''
+            modify_request(-> r { r.unmatched_path = match.post_match }) do
+              yield *match.captures
+            end
+          else
+            reject(nil) # path rejections are nil to allow more specific rejections to be seen
+          end
         end
-      ensure
-        request.unmatched_path = path
       end
 
       def path_end(&inner)

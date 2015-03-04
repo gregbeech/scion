@@ -112,10 +112,26 @@ module Scion
     end
   end
 
+  class Context
+    attr_accessor :request, :response, :result
+
+    def initialize(request)
+      @request = request
+      @result = Result::EMPTY
+    end
+
+    def branch
+      original_request = @request.dup
+      yield
+    ensure
+      @request = original_request
+    end
+  end
+
   class Base
     include Scion::Routing::Directives
 
-    attr_reader :request, :result
+    attr_reader :context
 
     def route
       raise NotImplementedError.new
@@ -126,23 +142,22 @@ module Scion
     end
 
     def call!(env)
-      @request = Request.new(Rack::Request.new(env))
-      @result = Result::EMPTY
+      @context = Context.new(Request.new(Rack::Request.new(env)), Response.new)
 
       begin
         catch (:complete) { route }
-        @result = handle_rejections(@result.rejections) if @result.reject?
+        @context.result = handle_rejections(@context.result.rejections) if @context.result.reject?
       rescue => e
-        @result = handle_error(e)
+        @context.result = handle_error(e)
       end
 
-      @result = Result.error(501, 'The routing tree is incomplete') unless result.complete?
-      [@result.status, @result.headers, [@result.body]]
+      @context.result = Result.error(501, 'The routing tree is incomplete') unless @context.result.complete?
+      [@context.result.status, @context.result.headers, [@context.result.body]]
     end
 
     def handle_error(e)
       puts "handle_error: #{e}"
-      @result = Result.error(500)
+      @context.result = Result.error(500)
     end
 
     def handle_rejections(rejections)
@@ -163,12 +178,6 @@ module Scion
           Result.error(500)
         end
       end
-    end
-
-    private
-
-    def set_result(result)
-      @result = result
     end
 
   end
