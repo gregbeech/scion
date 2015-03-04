@@ -5,7 +5,9 @@ class MyApp < Scion::Base
   def route
     path "/" do
       get do
-        complete 200, { hello: "World" }
+        query_hash do |query|
+          complete 200, { hello: "World" }.merge(query)
+        end
       end
       post do
       	form_hash do |form|

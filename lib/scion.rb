@@ -5,7 +5,7 @@ require "scion/routing"
 module Scion
 
   class Rejection
-    PATH = "PATH"
+    HEADER = "HEADER"
     METHOD = "METHOD"
 
     attr_reader :reason, :info
@@ -13,6 +13,10 @@ module Scion
     def initialize(reason, info = {})
       @reason = reason
       @info = info
+    end
+
+    def [](name)
+      @info[name]
     end
   end
 
@@ -37,7 +41,7 @@ module Scion
       attr_reader :rejections
 
       def initialize(*rejections)
-        @rejections = rejections
+        @rejections = rejections.compact
       end
 
       def reject?
@@ -51,6 +55,10 @@ module Scion
 
     def reject?
       false
+    end
+
+    def handled?
+      complete? || reject?
     end
 
     def self.error(status, developer_message = nil)
@@ -81,6 +89,14 @@ module Scion
 
     def form_hash
       @rack_req.POST
+    end
+
+    def query_hash
+      @rack_req.GET
+    end
+
+    def header(name)
+      @rack_req.env["HTTP_" + name.to_s.upcase.tr('-', '_')]
     end
   end
 
@@ -119,10 +135,19 @@ module Scion
 
     def handle_rejections(rejections)
       puts "handle_rejections: #{rejections}"
-      case rejections.first.reason
-      when Rejection::PATH then Result.error(404)
-      when Rejection::METHOD then Result.error(405)
-      else Result.error(500)
+      if rejections.empty?
+        Result.error(404)
+      else
+        rejection = rejections.first
+        case rejection.reason
+        when Rejection::HEADER
+          Result.error(400, "Missing required header: #{rejection[:required]}")
+        when Rejection::METHOD
+          supported = rejections.take_while { |r| r.reason == Rejection::METHOD }.map { |r| r[:supported].upcase }
+          Result.error(405, "Supported methods: #{supported.join(", ")}")
+        else 
+          Result.error(500)
+        end
       end
     end
 

@@ -9,22 +9,25 @@ module Scion
 
       def reject(rejection)
         if result.reject?
-          result.rejections << rejection
+          result.rejections << rejection unless rejection.nil?
         else
           set_result Result::Reject.new(rejection)
         end
       end
-
-      def cancel_rejections(reason)
-        if result.reject?
-          result.rejections.delete_if { |r| r.reason == reason }
-        end
-      end
     end
 
-    module FormDirectives
-      def form_hash
-        yield request.form_hash
+    module HeaderDirectives
+      def header(name)
+        value = request.header(name)
+        if value
+          yield value
+        else
+          reject(Rejection.new(Rejection::HEADER, { required: name }))
+        end
+      end
+
+      def accepts(*media_types)
+
       end
     end
 
@@ -33,7 +36,6 @@ module Scion
 
       def request_method(method)
         if request.request_method == method
-          cancel_rejections(Rejection::METHOD)
           yield
         else
           reject(Rejection.new(Rejection::METHOD, { supported: method }))
@@ -47,6 +49,16 @@ module Scion
       end
     end
 
+    module ParamDirectives
+      def form_hash
+        yield request.form_hash
+      end
+
+      def query_hash
+        yield request.query_hash
+      end
+    end
+
     module PathDirectives
       include RouteDirectives
 
@@ -54,11 +66,10 @@ module Scion
         path = request.unmatched_path
         match = path.match(pattern)
         if match && match.pre_match == ''
-          cancel_rejections(Rejection::PATH)
           request.unmatched_path = match.post_match
           yield *match.captures
         else
-          reject(Rejection.new(Rejection::PATH))
+          reject(nil) # path rejections are nil to allow more specific rejections to be seen
         end
       ensure
         request.unmatched_path = path
@@ -78,8 +89,9 @@ module Scion
     end
 
     module Directives
-      include FormDirectives
+      include HeaderDirectives
       include MethodDirectives
+      include ParamDirectives
       include PathDirectives
     end
 
