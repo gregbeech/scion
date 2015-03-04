@@ -142,7 +142,7 @@ module Scion
     end
 
     def call!(env)
-      @context = Context.new(Request.new(Rack::Request.new(env)), Response.new)
+      @context = Context.new(Request.new(Rack::Request.new(env)))
 
       begin
         catch (:complete) { route }

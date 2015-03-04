@@ -23,7 +23,7 @@ module Scion
         yield lambda ? lambda.call(context.request) : context.request
       end
 
-      def modify_request(lambda)
+      def modify_request(lambda) # TODO: This would be better as map_request and make it immutable
         context.branch do
           lambda.call(context.request)
           yield
