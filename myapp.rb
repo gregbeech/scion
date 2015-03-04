@@ -1,29 +1,31 @@
-require "scion"
+require 'scion'
 
 class MyApp < Scion::Base
 
   def route
-    path "/" do
-      get do
-        query_hash do |query|
-          complete 200, { hello: "World" }.merge(query)
+    provides :json, :xml do |respond_with|
+      path '/' do
+        get do        
+          query_hash do |query|
+            complete 200, { hello: 'World', respond_with: respond_with }.merge(query)
+          end
+        end
+        post do
+        	form_hash do |form|
+            complete 201, { created: 'OK' }.merge(form)
+          end
         end
       end
-      post do
-      	form_hash do |form|
-          complete 201, { created: "OK" }.merge(form)
+      path_prefix '/users' do
+        path_end do
+          get do
+            complete 200, [{ user_id: 123 }, { user_id: 456 }]
+          end
         end
-      end
-    end
-    path_prefix "/users" do
-      path_end do
-        get do
-          complete 200, [{ user_id: 123 }, { user_id: 456 }]
-        end
-      end
-      path "/([0-9]+)" do |user_id|
-        get do
-          complete 200, { user_id: user_id }
+        path '/([0-9]+)' do |user_id|
+          get do
+            complete 200, { user_id: user_id }
+          end
         end
       end
     end

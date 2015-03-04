@@ -3,7 +3,7 @@ module Scion
 
     module RouteDirectives
       def complete(status, body)
-        set_result Result::Complete.new(status, { "Content-Type" => "application/json" }, body.to_json)
+        set_result Result::Complete.new(status, { 'Content-Type' => 'application/json' }, body.to_json)
         throw :complete
       end
 
@@ -17,17 +17,46 @@ module Scion
     end
 
     module HeaderDirectives
-      def header(name)
-        value = request.header(name)
-        if value
-          yield value
-        else
-          reject(Rejection.new(Rejection::HEADER, { required: name }))
+      def header(name, &inner)
+        optional_header(name) do |value|
+          if value
+            inner.call(value)
+          else
+            reject(Rejection.new(Rejection::HEADER, { required: name }))
+          end
         end
       end
 
-      def accepts(*media_types)
+      def optional_header(name)
+        yield request.header(name)
+      end
 
+      def provides(*media_types)
+        media_types = parse_media_types(media_types)
+        optional_header 'Accept' do |accept|
+          if accept
+            media_type = accept.media_ranges.lazy.map { |mr| media_types.find { |mt| mt =~ mr } }.find { |x| x }
+            if media_type
+              yield media_type
+            else
+              reject(Rejection.new(Rejection::ACCEPT, { supported: media_types }))
+            end
+          else
+            yield media_types.first
+          end
+        end
+      end
+
+      private
+
+      def parse_media_types(media_types)
+        media_types.map do |mt| 
+          case mt
+          when MediaType then mt
+          when Symbol then MediaType.parse("application/#{mt}")
+          else MediaType.parse(mt)
+          end
+        end
       end
     end
 

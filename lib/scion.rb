@@ -1,12 +1,15 @@
-require "json"
-require "rack"
-require "scion/routing"
+require 'json'
+require 'rack'
+require 'active_support/core_ext/string'
+require 'scion/headers'
+require 'scion/routing'
 
 module Scion
 
   class Rejection
-    HEADER = "HEADER"
-    METHOD = "METHOD"
+    ACCEPT = 'ACCEPT'
+    HEADER = 'HEADER'
+    METHOD = 'METHOD'
 
     attr_reader :reason, :info
 
@@ -67,8 +70,8 @@ module Scion
         developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]
       }.to_json
       headers = { 
-        "Content-Length" => body.size.to_s,
-        "Content-Type" => "application/json"
+        'Content-Length' => body.size.to_s,
+        'Content-Type' => 'application/json'
       }
       Result::Complete.new(status, headers, body)
     end
@@ -96,7 +99,16 @@ module Scion
     end
 
     def header(name)
-      @rack_req.env["HTTP_" + name.to_s.upcase.tr('-', '_')]
+      snake_name = name.to_s.tr('-', '_')
+      raw = @rack_req.env['HTTP_' + snake_name.upcase]
+
+      class_name = snake_name.classify.to_sym
+      begin
+        klass = Scion::Headers.const_get(class_name)
+        klass.parse(raw)
+      rescue NameError
+        raw
+      end
     end
   end
 
@@ -124,7 +136,7 @@ module Scion
         @result = handle_error(e)
       end
 
-      @result = Result.error(501, "The routing tree is incomplete") unless result.complete?
+      @result = Result.error(501, 'The routing tree is incomplete') unless result.complete?
       [@result.status, @result.headers, [@result.body]]
     end
 
@@ -140,6 +152,8 @@ module Scion
       else
         rejection = rejections.first
         case rejection.reason
+        when Rejection::ACCEPT
+          Result.error(406, "Supported media types: #{rejection[:supported].join(", ")}")
         when Rejection::HEADER
           Result.error(400, "Missing required header: #{rejection[:required]}")
         when Rejection::METHOD
