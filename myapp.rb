@@ -7,7 +7,9 @@ class MyApp < Scion::Base
       path '/' do
         get do        
           query_hash do |query|
-            complete 200, { hello: 'World', response_type: response_type }.merge(query)
+            respond_with_header Scion::Headers::Raw.new('Foo', 'Bar') do
+              complete 200, { hello: 'World', response_type: response_type }.merge(query)
+            end
           end
         end
         post do
