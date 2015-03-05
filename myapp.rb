@@ -3,31 +3,29 @@ require 'scion'
 class MyApp < Scion::Base
 
   def route
-    provides :json, :xml do |response_type|
-      path '/' do
-        get do        
-          query_hash do |query|
-            respond_with_header Scion::Headers::Raw.new('Foo', 'Bar') do
-              complete 200, { hello: 'World', response_type: response_type }.merge(query)
-            end
-          end
-        end
-        post do
-        	form_hash do |form|
-            complete 201, { created: 'OK' }.merge(form)
+    path '/' do
+      get do        
+        query_hash do |query|
+          respond_with_header Scion::Headers::Raw.new('Foo', 'Bar') do
+            complete 200, { hello: 'World' }.merge(query)
           end
         end
       end
-      path_prefix '/users' do
-        path_end do
-          get do
-            complete 200, [{ user_id: 123 }, { user_id: 456 }]
-          end
+      post do
+      	form_hash do |form|
+          complete 201, { created: 'OK' }.merge(form)
         end
-        path '/([0-9]+)' do |user_id|
-          get do
-            complete 200, { user_id: user_id }
-          end
+      end
+    end
+    path_prefix '/users' do
+      path_end do
+        get do
+          complete 200, [{ user_id: 123 }, { user_id: 456 }]
+        end
+      end
+      path '/([0-9]+)' do |user_id|
+        get do
+          complete 200, { user_id: user_id }
         end
       end
     end

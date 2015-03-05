@@ -3,7 +3,7 @@ module Scion
 
     module RouteDirectives
       def complete(status, body)
-        context.response.complete!(status, body.to_json)
+        context.response.complete!(status, body)
         throw :complete
       end
 
@@ -54,24 +54,6 @@ module Scion
       def respond_with_header(header)
         modify_response(-> r { r.headers[header.name] = header.to_s }) do
           yield
-        end
-      end
-
-      def provides(*media_types)
-        media_types = parse_media_types(media_types)
-        optional_header 'Accept' do |accept|
-          if accept
-            media_type = accept.media_ranges.lazy.map { |mr| media_types.find { |mt| mt =~ mr } }.find { |x| x }
-            if media_type
-              context.response.headers['Content-Type'] = media_type.to_s # TODO: Don't modify this directly
-              yield media_type
-            else
-              reject(Rejection.new(Rejection::ACCEPT, { supported: media_types }))
-            end
-          else
-            context.response.headers['Content-Type'] = media_type.to_s # TODO: Don't modify this directly
-            yield media_types.first
-          end
         end
       end
 

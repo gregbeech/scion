@@ -3,7 +3,6 @@
 A Ruby HTTP framework inspired by [Spray][spray].
 
 This is a just-for-fun proof of concept to see if it's possible to create a Spray-like routing DSL in Ruby, and to see whether it would feel "Rubyish". It's pretty small (a few hundred lines of code) but does work, albeit synchronously rather than asynchronously like spray.
-
 A basic app looks something like this, where the route is defined as a tree:
 
 ```ruby
@@ -12,29 +11,27 @@ require 'scion'
 class MyApp < Scion::Base
 
   def route
-    provides :json, :xml do |response_type|
-      path '/' do
-        get do        
-          query_hash do |query|
-            complete 200, { hello: 'World', response_type: response_type }.merge(query)
-          end
-        end
-        post do
-          form_hash do |form|
-            complete 201, { created: 'OK' }.merge(form)
-          end
+    path '/' do
+      get do        
+        query_hash do |query|
+          complete 200, { hello: 'World' }.merge(query)
         end
       end
-      path_prefix '/users' do
-        path_end do
-          get do
-            complete 200, [{ user_id: 123 }, { user_id: 456 }]
-          end
+      post do
+        form_hash do |form|
+          complete 201, { created: 'OK' }.merge(form)
         end
-        path '/([0-9]+)' do |user_id|
-          get do
-            complete 200, { user_id: user_id }
-          end
+      end
+    end
+    path_prefix '/users' do
+      path_end do
+        get do
+          complete 200, [{ user_id: 123 }, { user_id: 456 }]
+        end
+      end
+      path '/([0-9]+)' do |user_id|
+        get do
+          complete 200, { user_id: user_id }
         end
       end
     end

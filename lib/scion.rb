@@ -81,7 +81,7 @@ module Scion
       body = { 
         status: status, 
         developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]
-      }.to_json
+      }
       response = Response.new.complete!(status, body)
     end
   end
@@ -105,8 +105,59 @@ module Scion
     end
   end
 
+  class JsonMarshaller
+    def media_type
+      MediaType::JSON
+    end
+
+    def content_type
+      "#{media_type}; encoding=utf-8" # TODO: Should have a real model for content type
+    end
+
+    def marshal_to?(requested)
+      media_type =~ requested
+    end
+
+    def marshal(obj)
+      [obj.to_json]
+    end
+  end
+
+  class XmlMarshaller
+    def media_type
+      MediaType::XML
+    end
+
+    def content_type
+      "#{media_type}; encoding=utf-8" # TODO: Should have a real model for content type
+    end
+
+    def marshal_to?(requested)
+      media_type =~ requested
+    end
+
+    def marshal(obj)
+      raise "#{obj.class} does not support #to_xml" unless obj.respond_to?(:to_xml)
+      [obj.to_xml]
+    end
+  end
+
   class Base
     include Scion::Routing::Directives
+
+    DEFAULT_MARSHALLERS = [JsonMarshaller.new]
+
+    class << self
+      def marshallers(*marshallers)
+        @marshallers = marshallers unless marshallers.nil? || marshallers.empty?
+        (@marshallers.nil? || @marshallers.empty?) ? DEFAULT_MARSHALLERS : @marshallers
+      end
+
+      def select_marshaller(media_ranges)
+        puts "@marshallers = #{@marshallers}"
+        media_ranges.lazy.map { |mr| marshallers.find { |m| m.marshal_to?(mr) } }.find { |m| m }
+      end
+    end
 
     attr_reader :context
 
@@ -121,16 +172,24 @@ module Scion
     def call!(env)
       @context = Context.new(Request.new(Rack::Request.new(env)))
 
+      accept = @context.request.header('Accept')
+      marshaller = accept ? self.class.select_marshaller(accept.media_ranges) : self.class.marshallers.first
       begin
-        catch (:complete) { route }
-        puts "complete? #{@context.response.complete?}"
+        if marshaller.nil?
+          @context.rejections << Rejection.new(Rejection::ACCEPT, { supported: self.class.marshallers.map(&:media_type) })
+        else
+          catch (:complete) { route }
+        end
         @context.response = handle_rejections(@context.rejections) unless @context.response.complete?
-      # rescue => e
-      #   @context.response = handle_error(e)
+      rescue => e
+        @context.response = handle_error(e)
       end
+      @context.response = Response.error(501, 'The response was not completed') unless @context.response.complete?
 
-      @context.response = Response.error(501, 'The routing tree is incomplete') unless @context.response.complete?
-      [@context.response.status, @context.response.headers, [@context.response.body]]
+      marshaller ||= self.class.marshallers.first
+      @context.response.headers['Content-Type'] = marshaller.content_type
+      body = marshaller.marshal(@context.response.body)
+      [@context.response.status, @context.response.headers, body]
     end
 
     def handle_error(e)
