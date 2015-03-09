@@ -29,6 +29,7 @@ module Scion
     def initialize(rack_req)
       @rack_req = rack_req
       @unmatched_path = rack_req.path
+      freeze
     end
 
     def request_method
@@ -56,6 +57,17 @@ module Scion
         Scion::Headers::Raw(name, value)
       end
     end
+
+    def copy(changes = {})
+      r = dup
+      changes.each { |k, v| r.instance_variable_set("@#{k}", v) }
+      r.freeze
+    end
+
+    def freeze
+      @unmatched_path.freeze
+      super
+    end
   end
 
   class Response
@@ -64,17 +76,23 @@ module Scion
     def initialize
       @headers = {}
       @complete = false
+      freeze
     end
 
     def complete?
       @complete
     end
 
-    def complete!(status, body)
-      @status = status
-      @body = body
-      @complete = true
-      self
+    def copy(changes = {})
+      r = dup
+      changes.each { |k, v| r.instance_variable_set("@#{k}", v) }
+      r.freeze
+    end
+
+    def freeze
+      @headers.freeze
+      @body.freeze
+      super
     end
 
     def self.error(status, developer_message = nil)
@@ -82,22 +100,22 @@ module Scion
         status: status, 
         developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]
       }
-      response = Response.new.complete!(status, body)
+      Response.new.copy(complete: true, status: status, body: body)
     end
   end
 
   class Context
     attr_accessor :request, :response, :rejections
 
-    def initialize(request)
+    def initialize(request, response)
       @request = request
-      @response = Response.new
+      @response = response
       @rejections = []
     end
 
     def branch
-      original_request = @request.dup
-      original_response = @response.dup
+      original_request = @request
+      original_response = @response
       yield
     ensure
       @request = original_request
@@ -170,7 +188,7 @@ module Scion
     end
 
     def call!(env)
-      @context = Context.new(Request.new(Rack::Request.new(env)))
+      @context = Context.new(Request.new(Rack::Request.new(env)), Response.new)
 
       accept = @context.request.header('Accept')
       marshaller = accept ? self.class.select_marshaller(accept.media_ranges) : self.class.marshallers.first
@@ -187,9 +205,10 @@ module Scion
       @context.response = Response.error(501, 'The response was not completed') unless @context.response.complete?
 
       marshaller ||= self.class.marshallers.first
-      @context.response.headers['Content-Type'] = marshaller.content_type
-      body = marshaller.marshal(@context.response.body)
-      [@context.response.status, @context.response.headers, body]
+      resp = @context.response.copy(
+        headers: @context.response.headers.merge('Content-Type' => marshaller.content_type),
+        body: marshaller.marshal(@context.response.body))
+      [resp.status, resp.headers, resp.body]
     end
 
     def handle_error(e)

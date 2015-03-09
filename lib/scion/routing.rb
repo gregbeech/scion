@@ -2,9 +2,24 @@ module Scion
   module Routing
 
     module RouteDirectives
+      def map_request(map)
+        context.branch do
+          context.request = map.respond_to?(:call) ? map.call(context.request) : context.request.copy(map)
+          yield
+        end
+      end
+
+      def map_response(map)
+        context.branch do
+          context.response = map.respond_to?(:call) ? map.call(context.response) : context.response.copy(map)
+          yield
+        end
+      end
+
       def complete(status, body)
-        context.response.complete!(status, body)
-        throw :complete
+        map_response complete: true, status: status, body: body do
+          throw :complete
+        end
       end
 
       def reject(rejection)
@@ -18,20 +33,6 @@ module Scion
       def extract_request(lambda = nil)
         yield lambda ? lambda.call(context.request) : context.request
       end
-
-      def modify_request(lambda) # TODO: This would be better as map_request and make it immutable
-        context.branch do
-          lambda.call(context.request)
-          yield
-        end
-      end
-
-      def modify_response(lambda) # TODO: This would be better as map_response and make it immutable
-        context.branch do
-          lambda.call(context.response)
-          yield
-        end
-      end
     end
 
     module HeaderDirectives
@@ -40,7 +41,7 @@ module Scion
           if value
             yield value
           else
-            reject(Rejection.new(Rejection::HEADER, { required: name }))
+            reject Rejection.new(Rejection::HEADER, { required: name })
           end
         end
       end
@@ -52,7 +53,7 @@ module Scion
       end
 
       def respond_with_header(header)
-        modify_response(-> r { r.headers[header.name] = header.to_s }) do
+        map_response -> r { r.copy(headers: r.headers.merge(header.name => header.to_s)) } do
           yield
         end
       end
@@ -78,7 +79,7 @@ module Scion
           if request.request_method == method
             yield
           else
-            reject(Rejection.new(Rejection::METHOD, { supported: method }))
+            reject Rejection.new(Rejection::METHOD, { supported: method })
           end
         end
       end
@@ -111,11 +112,11 @@ module Scion
         extract_request do |request|
           match = request.unmatched_path.match(pattern)
           if match && match.pre_match == ''
-            modify_request(-> r { r.unmatched_path = match.post_match }) do
+            map_request unmatched_path: match.post_match do
               yield *match.captures
             end
           else
-            reject(nil) # path rejections are nil to allow more specific rejections to be seen
+            reject nil # path rejections are nil to allow more specific rejections to be seen
           end
         end
       end
