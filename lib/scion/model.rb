@@ -19,6 +19,10 @@ module Scion
       MediaRange.new(self, q)
     end
 
+    def with_charset(charset)
+      ContentType.new(self, charset)
+    end
+
     def =~(media_type)
       media_type = MediaType.parse(media_type) unless media_type.respond_to?(:type) && media_type.respond_to?(:subtype)
       [@type, '*'].include?(media_type.type) && [@subtype, '*'].include?(media_type.subtype) && media_type.params.all? { |n, v| @params[n] == v }
@@ -30,6 +34,21 @@ module Scion
 
     JSON = MediaType.new('application', 'json')
     XML = MediaType.new('application', 'xml')
+  end
+
+  class ContentType
+    attr_reader :media_type, :charset
+
+    DEFAULT_ENCODING = Encoding::UTF_8
+
+    def initialize(media_type, charset)
+      @media_type = media_type
+      @charset = charset.is_a?(Encoding) ? charset : Encoding.find(charset)
+    end
+
+    def to_s
+      "#{@media_type}; charset=#{@charset}"
+    end
   end
 
   class MediaRange

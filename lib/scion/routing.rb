@@ -53,7 +53,7 @@ module Scion
       end
 
       def respond_with_header(header)
-        map_response -> r { r.copy(headers: r.headers.merge(header.name => header.to_s)) } do
+        map_response -> r { r.copy(headers: r.headers.add(header)) } do
           yield
         end
       end

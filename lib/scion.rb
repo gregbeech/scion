@@ -69,7 +69,7 @@ module Scion
     attr_reader :status, :headers, :body
 
     def initialize
-      @headers = {}
+      @headers = Headers.new
       @complete = false
       freeze
     end
@@ -124,7 +124,7 @@ module Scion
     end
 
     def content_type
-      "#{media_type}; encoding=utf-8" # TODO: Should have a real model for content type
+      media_type.with_charset(Encoding::UTF_8)
     end
 
     def marshal_to?(requested)
@@ -142,7 +142,7 @@ module Scion
     end
 
     def content_type
-      "#{media_type}; encoding=utf-8" # TODO: Should have a real model for content type
+      media_type.with_charset(Encoding::UTF_8)
     end
 
     def marshal_to?(requested)
@@ -201,9 +201,9 @@ module Scion
 
       marshaller ||= self.class.marshallers.first
       resp = @context.response.copy(
-        headers: @context.response.headers.merge('Content-Type' => marshaller.content_type),
+        headers: @context.response.headers.set(Headers::ContentType.new(marshaller.content_type)),
         body: marshaller.marshal(@context.response.body))
-      [resp.status, resp.headers, resp.body]
+      [resp.status, resp.headers.map { |h| [h.name, h.to_s] }.to_h, resp.body]
     end
 
     def handle_error(e)
