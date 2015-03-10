@@ -3,19 +3,36 @@ require 'scion/model'
 module Scion
   module Headers
 
-    class Header
-      attr_reader :name
+    class << self
+      def register(klass)
+        (@registered_headers ||= {})[klass.const_get(:NAME)] = klass
+      end
 
-      def initialize(name)
-        @name = name
+      def header_class(name)
+        @registered_headers[name]
+      end
+
+      def Header(name)
+        klass = Class.new do
+          def name
+            self.class.const_get(:NAME)
+          end
+
+          def self.inherited(base)
+            Headers.register(base)
+          end
+        end
+        Headers.const_set("#{name.tr('-', '_').classify}Header", klass)
+        klass.const_set(:NAME, name)
+        klass
       end
     end
 
-    class Raw < Header
-      attr_reader :value
+    class Raw
+      attr_reader :name, :value
 
       def initialize(name, value)
-        super(name)
+        @name = name
         @value = value
       end
 
@@ -24,12 +41,11 @@ module Scion
       end
     end
 
-    class Accept < Header
+    class Accept < Header 'Accept'
       attr_reader :media_ranges
 
       def initialize(media_ranges)
-        super('Accept')
-        @media_ranges = media_ranges.sort.reverse
+        @media_ranges = media_ranges.sort.reverse!
       end
 
       def self.parse(s)

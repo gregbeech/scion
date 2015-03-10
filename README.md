@@ -8,7 +8,7 @@ A basic app looks something like this, where the route is defined as a tree:
 ```ruby
 require 'scion'
 
-class MyApp < Scion::Base
+class MyApp < Scion::Api
 
   def route
     path '/' do

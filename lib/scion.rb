@@ -49,13 +49,8 @@ module Scion
       value = @rack_req.env['HTTP_' + snake_name.upcase]
       return nil if value.nil?
 
-      class_name = snake_name.classify.to_sym
-      begin
-        klass = Scion::Headers.const_get(class_name)
-        klass.parse(value)
-      rescue NameError
-        Scion::Headers::Raw(name, value)
-      end
+      klass = Scion::Headers.header_class(name)
+      klass ? klass.parse(value) : Scion::Headers::Raw.new(name, value)
     end
 
     def copy(changes = {})
@@ -160,7 +155,7 @@ module Scion
     end
   end
 
-  class Base
+  class Api
     include Scion::Routing::Directives
 
     DEFAULT_MARSHALLERS = [JsonMarshaller.new]

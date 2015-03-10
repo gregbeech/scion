@@ -36,6 +36,12 @@ module Scion
     end
 
     module HeaderDirectives
+      def optional_header(name)
+        extract_request do |request|
+          yield request.header(name)
+        end
+      end
+
       def header(name)
         optional_header(name) do |value|
           if value
@@ -46,27 +52,9 @@ module Scion
         end
       end
 
-      def optional_header(name)
-        extract_request do |request|
-          yield request.header(name)
-        end
-      end
-
       def respond_with_header(header)
         map_response -> r { r.copy(headers: r.headers.merge(header.name => header.to_s)) } do
           yield
-        end
-      end
-
-      private
-
-      def parse_media_types(media_types)
-        media_types.map do |mt| 
-          case mt
-          when MediaType then mt
-          when Symbol then MediaType.parse("application/#{mt}")
-          else MediaType.parse(mt)
-          end
         end
       end
     end

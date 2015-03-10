@@ -1,19 +1,19 @@
 require 'scion'
 
-class MyApp < Scion::Base
+class MyApp < Scion::Api
 
   def route
     path '/' do
       get do        
         query_hash do |query|
-          respond_with_header Scion::Headers::Raw.new('Foo', 'Bar') do
-            complete 200, { hello: 'World' }.merge(query)
-          end
+          complete 200, { hello: 'World' }.merge(query)
         end
       end
       post do
       	form_hash do |form|
-          complete 201, { created: 'OK' }.merge(form)
+          respond_with_header Scion::Headers::Raw.new('Location', "/#{form['id']}") do
+            complete 201, { created: 'OK' }.merge(form)
+          end
         end
       end
     end
