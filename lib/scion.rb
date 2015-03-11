@@ -127,8 +127,8 @@ module Scion
       media_type.with_charset(Encoding::UTF_8)
     end
 
-    def marshal_to?(requested)
-      media_type =~ requested
+    def marshal_to?(media_range)
+      media_range =~ media_type
     end
 
     def marshal(obj)
@@ -145,8 +145,8 @@ module Scion
       media_type.with_charset(Encoding::UTF_8)
     end
 
-    def marshal_to?(requested)
-      media_type =~ requested
+    def marshal_to?(media_range)
+      media_range =~ media_type
     end
 
     def marshal(obj)

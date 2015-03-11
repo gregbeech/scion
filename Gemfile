@@ -1,9 +1,15 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem "rack"
-gem "thin"
-gem "activesupport"
+gem 'activesupport'
+gem 'parslet'
+gem 'rack'
+gem 'thin'
 
 group :development do
-  gem "shotgun"
+  gem 'shotgun'
+end
+
+group :development, :test do
+  gem 'rspec'
+  gem 'guard-rspec', :require => false
 end

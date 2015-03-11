@@ -1,3 +1,6 @@
+require 'scion/errors'
+require 'scion/parsers'
+
 module Scion
 
   class MediaType
@@ -10,9 +13,11 @@ module Scion
     end
 
     def self.parse(s)
-      type, subtype, *param_list = s.split(/\s*[\/;]\s*/)
-      params = Hash[param_list.map { |p| p.split(/\s*=\s*/) }]
-      MediaType.new(type, subtype, params)
+      tree = Parsers::MediaTypeParser.new.parse(s)
+      tree = Parsers::MediaTypeTransform.new.apply(tree)
+      MediaType.new(tree[:type], tree[:subtype], tree[:params])
+    rescue Parslet::ParseFailed
+      raise Scion::ParseError.new("Invalid media range (#{s})")
     end
 
     def with_q(q)
@@ -23,13 +28,8 @@ module Scion
       ContentType.new(self, charset)
     end
 
-    def =~(media_type)
-      media_type = MediaType.parse(media_type) unless media_type.respond_to?(:type) && media_type.respond_to?(:subtype)
-      [@type, '*'].include?(media_type.type) && [@subtype, '*'].include?(media_type.subtype) && media_type.params.all? { |n, v| @params[n] == v }
-    end
-
     def to_s
-      "#{@type}/#{@subtype}" << @params.map { |n, v| "; #{n}=#{v}" }.join
+      "#{@type}/#{@subtype}" << @params.map { |n, v| v ? "; #{n}=#{v}" : "; #{n}" }.join
     end
 
     JSON = MediaType.new('application', 'json')
@@ -41,7 +41,7 @@ module Scion
 
     DEFAULT_ENCODING = Encoding::UTF_8
 
-    def initialize(media_type, charset)
+    def initialize(media_type, charset = DEFAULT_ENCODING)
       @media_type = media_type
       @charset = charset.is_a?(Encoding) ? charset : Encoding.find(charset)
     end
@@ -56,23 +56,21 @@ module Scion
 
     DEFAULT_Q = 1.0
 
-    attr_reader :media_type, :q
+    attr_reader :type, :subtype, :q, :params
 
-    def initialize(media_type, q)
-      @media_type = media_type
-      @q = q.nil? ? DEFAULT_Q : q.to_f
+    def initialize(type, subtype, params = {})
+      @type = type
+      @subtype = subtype
+      @q = (params.delete('q') || DEFAULT_Q).to_f
+      @params = params
     end
 
     def self.parse(s)
-      media_type = MediaType.parse(s)
-      q = media_type.params.delete('q')
-      MediaRange.new(media_type, q)
-    end
-
-    [:type, :subtype, :params].each do |name|
-      define_method(name) do
-        @media_type.send(name)
-      end
+      tree = Parsers::MediaRangeParser.new.parse(s)
+      tree = Parsers::MediaTypeTransform.new.apply(tree)
+      MediaRange.new(tree[:type], tree[:subtype], tree[:params])
+    rescue Parslet::ParseFailed
+      raise Scion::ParseError.new("Invalid media range (#{s})")
     end
 
     def <=>(other)
@@ -83,7 +81,15 @@ module Scion
       ds = compare_types(@subtype, other.subtype)
       return ds if ds != 0
       params.size <=> other.params.size
+    end 
+
+    def =~(media_type)
+      (type == '*' || type == media_type.type) &&
+      (subtype == '*' || subtype == media_type.subtype) &&
+      params.all? { |n, v| media_type.params[n] == v }
     end
+
+    alias_method :===, :=~
 
     def to_s
       s = "#{type}/#{subtype}"

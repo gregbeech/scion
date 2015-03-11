@@ -41,17 +41,7 @@ module Scion
       self
     end
 
-    def update!(header)
-      existing = @hash[header.name]
-      if existing && existing.respond_to?(:merge)
-        set!(existing.merge(header))
-      else
-        set!(header)
-      end
-      self
-    end
-
-    %i(set add update).each do |name|
+    %i(set add).each do |name|
       define_method name do |header|
         dup.send("#{name}!", header)
       end
