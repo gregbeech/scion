@@ -1,4 +1,4 @@
-require 'scion/model'
+require 'scion/media_type'
 
 describe Scion::MediaType do
 

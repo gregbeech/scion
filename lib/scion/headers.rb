@@ -1,4 +1,4 @@
-require 'scion/model'
+require 'scion/media_type'
 
 module Scion
   class Headers
