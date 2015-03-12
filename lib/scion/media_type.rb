@@ -92,9 +92,9 @@ module Scion
     alias_method :===, :=~
 
     def to_s
-      s = "#{type}/#{subtype}"
-      s << "; q=#{@q}" if q != DEFAULT_Q
-      s << params.map { |n, v| "; #{n}=#{v}" }.join
+      s = "#{@type}/#{@subtype}"
+      s << "; q=#{@q}" if @q != DEFAULT_Q
+      s << @params.map { |n, v| v ? "; #{n}=#{v}" : "; #{n}" }.join
     end
 
     private
