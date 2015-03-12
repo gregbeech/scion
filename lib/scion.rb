@@ -108,6 +108,14 @@ module Scion
       @rejections = []
     end
 
+    def complete!(status, body)
+      throw :completed, [status, body]
+    end
+
+    def reject!(*rejections)
+      throw :rejected, rejections
+    end
+
     def branch
       original_request = @request
       original_response = @response
@@ -183,27 +191,41 @@ module Scion
     end
 
     def call!(env)
-      @context = Context.new(Request.new(Rack::Request.new(env)), Response.new)
+      context = Context.new(Request.new(Rack::Request.new(env)), Response.new)
 
-      accept = @context.request.header('Accept')
-      marshaller = accept ? self.class.select_marshaller(accept.media_ranges) : self.class.marshallers.first
-      begin
-        if marshaller.nil?
-          @context.rejections << Rejection.new(Rejection::ACCEPT, { supported: self.class.marshallers.map(&:media_type) })
-        else
-          catch (:complete) { route }
+      r = route
+      status, body = catch (:completed) do
+        rejections = catch (:rejected) do
+          r.call(context)
         end
-        @context.response = handle_rejections(@context.rejections) unless @context.response.complete?
-      rescue => e
-        @context.response = handle_error(e)
+        return [400, {}, [rejections.to_s]]
       end
-      @context.response = Response.error(501, 'The response was not completed') unless @context.response.complete?
+      [status, {}, [body.to_json]]
+      
 
-      marshaller ||= self.class.marshallers.first
-      resp = @context.response.copy(
-        headers: @context.response.headers.set(Headers::ContentType.new(marshaller.content_type)),
-        body: marshaller.marshal(@context.response.body))
-      [resp.status, resp.headers.map { |h| [h.name, h.to_s] }.to_h, resp.body]
+
+
+      # accept = @context.request.header('Accept')
+      # marshaller = accept ? self.class.select_marshaller(accept.media_ranges) : self.class.marshallers.first
+      # begin
+      #   if marshaller.nil?
+      #     @context.rejections << Rejection.new(Rejection::ACCEPT, { supported: self.class.marshallers.map(&:media_type) })
+      #   else
+      #     r = route
+      #     puts "r = #{r}"
+      #     catch (:complete) { r.call(@context) }
+      #   end
+      #   @context.response = handle_rejections(@context.rejections) unless @context.response.complete?
+      # rescue => e
+      #   @context.response = handle_error(e)
+      # end
+      # @context.response = Response.error(501, 'The response was not completed') unless @context.response.complete?
+
+      # marshaller ||= self.class.marshallers.first
+      # resp = @context.response.copy(
+      #   headers: @context.response.headers.set(Headers::ContentType.new(marshaller.content_type)),
+      #   body: marshaller.marshal(@context.response.body))
+      # [resp.status, resp.headers.map { |h| [h.name, h.to_s] }.to_h, resp.body]
     end
 
     def handle_error(e)
