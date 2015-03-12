@@ -8,6 +8,11 @@ describe Scion::MediaType do
       expect(mt.type).to eq('application')
       expect(mt.subtype).to eq('json')
     end
+    it 'can parse media types with a subtype suffix' do
+      mt = Scion::MediaType.parse('application/rss+xml')
+      expect(mt.type).to eq('application')
+      expect(mt.subtype).to eq('rss+xml')
+    end
 
     it 'can parse media types with parameters' do
       mt = Scion::MediaType.parse('text/plain; format=flowed; paged')
@@ -33,6 +38,53 @@ describe Scion::MediaType do
       expect { Scion::MediaType.parse('application; foo=bar') }.to raise_error(Scion::ParseError)
       expect { Scion::MediaType.parse('/json') }.to raise_error(Scion::ParseError)
       expect { Scion::MediaType.parse('/json; foo=bar') }.to raise_error(Scion::ParseError)
+    end
+  end
+
+  %w(application audio image message multipart text video).each do |type|
+    context "#{type}?" do
+      it "returns true when the root type is '#{type}'" do
+        mt = Scion::MediaType.new(type, 'dummy')
+        expect(mt.send("#{type}?")).to eq(true)
+      end
+
+      it "returns false when the root type is not '#{type}'" do
+        mt = Scion::MediaType.new('dummy', 'dummy')
+        expect(mt.send("#{type}?")).to eq(false)
+      end
+    end
+  end
+
+  { experimental?: 'x', personal?: 'prs', vendor?: 'vnd' }.each do |method, prefix|
+    context method do
+      it "returns true when the subtype starts with '#{prefix}.'" do
+        mt = Scion::MediaType.new('application', "#{prefix}.dummy")
+        expect(mt.send(method)).to eq(true)
+      end
+
+      it "returns false when the subtype does not start with '#{prefix}.'" do
+        mt = Scion::MediaType.new('application', "dummy.dummy")
+        expect(mt.send(method)).to eq(false)
+      end
+    end
+  end
+
+  %w(ber der fastinfoset json wbxml xml zip).each do |format|
+    context "#{format}?" do
+      it "returns true when the subtype is '#{format}'" do
+        mt = Scion::MediaType.new('application', format)
+        expect(mt.send("#{format}?")).to eq(true)
+      end
+
+      it "returns true when the subtype ends with '+#{format}'" do
+        mt = Scion::MediaType.new('application', "dummy+#{format}")
+        expect(mt.send("#{format}?")).to eq(true)
+      end
+
+      it "returns false when the subtype is not '#{format}' and does not end with '+#{format}'" do
+        mt = Scion::MediaType.new('dummy', 'dummy+dummy')
+        expect(mt.send("#{format}?")).to eq(false)
+      end
     end
   end
 
@@ -80,10 +132,19 @@ describe Scion::MediaRange do
       expect(mt.subtype).to eq('*')
     end
 
-    it 'can parse basic media ranges' do
-      mt = Scion::MediaRange.parse('application/json')
+    it 'extracts q from the parameters' do
+      mt = Scion::MediaRange.parse('text/plain; q=0.8; format=flowed; paged')
+      expect(mt.type).to eq('text')
+      expect(mt.subtype).to eq('plain')
+      expect(mt.q).to eq(0.8)
+      expect(mt.params).to eq({ 'format' => 'flowed', 'paged' => nil })
+    end
+
+    it 'uses the default value for q if the value is not numeric' do
+      mt = Scion::MediaRange.parse('application/json; q=foo')
       expect(mt.type).to eq('application')
       expect(mt.subtype).to eq('json')
+      expect(mt.q).to eq(Scion::MediaRange::DEFAULT_Q)
     end
 
     it 'raises an error when the media range is invalid' do
