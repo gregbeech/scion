@@ -1,4 +1,6 @@
+require 'active_support/core_ext/string'
 require 'scion/media_type'
+require 'scion/parsers/headers'
 
 module Scion
   class Headers
@@ -103,7 +105,9 @@ module Scion
       end
 
       def self.parse(s)
-        Accept.new(*s.split(/\s*,\s*/).map { |v| MediaRange.parse(v) })
+        tree = Parsers::AcceptHeader.new.parse(s)
+        tree = Parsers::MediaTypeTransform.new.apply(tree)
+        Accept.new(*tree[:accept])
       end
 
       def to_s

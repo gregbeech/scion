@@ -1,5 +1,5 @@
-require 'parslet'
 require 'scion/errors'
+require 'scion/parsers/media_type'
 
 module Scion
 
@@ -13,9 +13,8 @@ module Scion
     end
 
     def self.parse(s)
-      tree = Parsers::MediaTypeParser.new.parse(s)
-      tree = Parsers::MediaTypeTransform.new.apply(tree)
-      MediaType.new(tree[:type], tree[:subtype], tree[:params])
+      tree = Parsers::MediaType.new.parse(s)
+      Parsers::MediaTypeTransform.new.apply(tree)
     rescue Parslet::ParseFailed
       raise Scion::ParseError.new("Invalid media type (#{s})")
     end
@@ -96,9 +95,8 @@ module Scion
     end
 
     def self.parse(s)
-      tree = Parsers::MediaRangeParser.new.parse(s)
-      tree = Parsers::MediaTypeTransform.new.apply(tree)
-      MediaRange.new(tree[:type], tree[:subtype], tree[:params])
+      tree = Parsers::MediaRange.new.parse(s)
+      Parsers::MediaTypeTransform.new.apply(tree)
     rescue Parslet::ParseFailed
       raise Scion::ParseError.new("Invalid media range (#{s})")
     end
@@ -135,45 +133,6 @@ module Scion
       elsif b == '*' then 1
       else 0
       end
-    end
-  end
-
-  module Parsers
-    class MediaTypeParser < Parslet::Parser
-      rule(:space?) { match('\s').repeat }
-
-      rule(:restricted_name_first) { match(/[a-zA-Z0-9]/) }
-      rule(:restricted_name_chars) { match(/[a-zA-Z0-9!#\$&\-\^_\.\+]/).repeat(0, 126) }
-      rule(:restricted_name) { restricted_name_first >> restricted_name_chars }
-
-      rule(:type) { restricted_name.as(:type) }
-      rule(:slash) { str('/') }
-      rule(:subtype) { restricted_name.as(:subtype) >> space? }
-
-      rule(:semicolon) { str(';') >> space? }
-      rule(:name) { restricted_name.as(:name) >> space? }
-      rule(:equals) { str('=') >> space? }
-      rule(:value) { match(/[^;\s]/).repeat(1).as(:value) >> space? } # not quite correct but probably sufficient
-      rule(:param) { semicolon >> name >> (equals >> value).maybe >> space? }
-      rule(:params) { param.repeat.as(:params) }
-
-      rule(:media_type) { type >> slash >> subtype >> params }
-      root(:media_type)
-    end
-
-    class MediaRangeParser < MediaTypeParser
-      rule(:wildcard) { str('*') }
-      rule(:wild_media_range) { wildcard.as(:type) >> slash >> wildcard.as(:subtype) >> params }
-      rule(:root_media_range) { type >> slash >> (wildcard.as(:subtype) | subtype) >> params }
-      
-      rule(:media_range) { wild_media_range | root_media_range }
-      root(:media_range)
-    end
-
-    class MediaTypeTransform < Parslet::Transform
-      rule(name: simple(:n), value: simple(:v)) { [n.str, v.str] }
-      rule(name: simple(:n)) { [n.str, nil] }
-      rule(type: simple(:t), subtype: simple(:s), params: subtree(:p)) { { type: t.str, subtype: s.str, params: Hash[p] } }
     end
   end
 
