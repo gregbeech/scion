@@ -1,3 +1,4 @@
+require 'scion/headers'
 require 'scion/parsers/media_type'
 
 module Scion
@@ -16,8 +17,7 @@ module Scion
 
       def self.parse(s)
         tree = Parsers::AcceptHeader.new.parse(s)
-        tree = Parsers::MediaTypeTransform.new.apply(tree)
-        Accept.new(*tree[:accept])
+        Parsers::AcceptHeaderTransform.new.apply(tree)
       end
 
       def to_s
@@ -31,6 +31,10 @@ module Scion
       include MediaTypeRules
       rule(:accept) { (media_range >> (comma >> sp? >> media_range).repeat).as(:accept) }
       root(:accept)
+    end
+
+    class AcceptHeaderTransform < MediaTypeTransform
+      rule(accept: sequence(:mr)) { Headers::Accept.new(*mr) }
     end
   end
 end

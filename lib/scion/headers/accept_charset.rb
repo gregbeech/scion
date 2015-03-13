@@ -1,4 +1,5 @@
 require 'scion/charset'
+require 'scion/headers'
 require 'scion/parsers/basic_rules'
 
 module Scion
@@ -42,9 +43,9 @@ module Scion
     end
 
     class AcceptCharsetHeaderTransform < Parslet::Transform
-      rule(charset: simple(:c), q: simple(:q)) { ::Scion::CharsetRange.new(::Scion::Charset.new(c.str), q.str) }
-      rule(charset: simple(:c)) { ::Scion::CharsetRange.new(::Scion::Charset.new(c.str)) }
-      rule(accept_charset: sequence(:cr)) { ::Scion::Headers::AcceptCharset.new(*cr) }
+      rule(charset: simple(:c), q: simple(:q)) { CharsetRange.new(c.str, q.str) }
+      rule(charset: simple(:c)) { CharsetRange.new(c.str) }
+      rule(accept_charset: sequence(:cr)) { Headers::AcceptCharset.new(*cr) }
     end
   end
 end

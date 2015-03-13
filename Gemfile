@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'activesupport'
-gem 'parslet'
+gem 'parslet', '~> 1.7'
 gem 'rack'
 gem 'thin'
 

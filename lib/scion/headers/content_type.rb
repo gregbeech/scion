@@ -1,8 +1,9 @@
+require 'scion/headers'
 require 'scion/parsers'
 
 module Scion
   class Headers
-
+    # http://tools.ietf.org/html/rfc7231#section-3.1.1.5
     class ContentType < Header 'Content-Type'
       attr_reader :content_type
 
@@ -18,6 +19,5 @@ module Scion
         @content_type.to_s
       end
     end
-
   end
 end
