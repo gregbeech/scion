@@ -97,7 +97,7 @@ module Scion
       attr_reader :media_ranges
 
       def initialize(*media_ranges)
-        @media_ranges = media_ranges.sort.reverse!
+        @media_ranges = media_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
       end
 
       def merge(other)
@@ -112,6 +112,27 @@ module Scion
 
       def to_s
         @media_ranges.map(&:to_s).join(', ')
+      end
+    end
+
+    class AcceptCharset < Header 'Accept-Charset'
+      attr_reader :charset_ranges
+
+      def initialize(*charset_ranges)
+        @charset_ranges = charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
+      end
+
+      def merge(other)
+        AcceptCharset.new(*(@charset_ranges + other.charset_ranges))
+      end
+
+      def self.parse(s)
+        tree = Parsers::AcceptCharsetHeader.new.parse(s)
+        Parsers::AcceptCharsetHeaderTransform.new.apply(tree)
+      end
+
+      def to_s
+        @charset_ranges.map(&:to_s).join(', ')
       end
     end
 

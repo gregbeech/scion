@@ -167,8 +167,11 @@ module Scion
       end
 
       def select_marshaller(media_ranges)
-        puts "@marshallers = #{@marshallers}"
-        media_ranges.lazy.map { |mr| marshallers.find { |m| m.marshal_to?(mr) } }.find { |m| m }
+        weighted = marshallers.sort_by do |m|
+          media_range = media_ranges.find { |mr| m.marshal_to?(mr) }
+          media_range ? media_range.q : 0.0
+        end
+        weighted.last
       end
     end
 

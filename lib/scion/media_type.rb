@@ -62,11 +62,11 @@ module Scion
   class ContentType
     attr_reader :media_type, :charset
 
-    DEFAULT_CHARSET = Encoding::UTF_8
+    DEFAULT_CHARSET = 'utf-8' # historically iso-8859-1 but see http://tools.ietf.org/html/rfc7231#appendix-B
 
     def initialize(media_type, charset = DEFAULT_CHARSET)
       @media_type = media_type
-      @charset = charset.is_a?(Encoding) ? charset : Encoding.find(charset)
+      @charset = charset
     end
 
     def self.parse(s)
@@ -102,13 +102,13 @@ module Scion
     end
 
     def <=>(other)
-      dq = @q <=> other.q
-      return dq if dq != 0
       dt = compare_types(@type, other.type)
       return dt if dt != 0
       ds = compare_types(@subtype, other.subtype)
       return ds if ds != 0
-      params.size <=> other.params.size
+      dp = params.size <=> other.params.size
+      return dp if dp != 0
+      @q <=> other.q
     end 
 
     def =~(media_type)
@@ -121,8 +121,9 @@ module Scion
 
     def to_s
       s = "#{@type}/#{@subtype}"
-      s << "; q=#{@q}" if @q != DEFAULT_Q
       s << @params.map { |n, v| v ? "; #{n}=#{v}" : "; #{n}" }.join
+      s << "; q=#{@q}" if @q != DEFAULT_Q
+      s
     end
 
     private

@@ -181,9 +181,15 @@ describe Scion::MediaRange do
       expect(mr1 <=> mr2).to eq(1)
     end
 
-    it 'considers media ranges with a lower q to be less' do
+    it 'does not consider the quality when one media range is more specific' do
+      mr1 = Scion::MediaRange.new('application', '*', 'q' => '0.3')
+      mr2 = Scion::MediaRange.new('*', '*', 'q' => '0.5')
+      expect(mr1 <=> mr2).to eq(1)
+    end
+
+    it 'considers the quality when media ranges are equally specific' do
       mr1 = Scion::MediaRange.new('application', 'json', 'q' => '0.8')
-      mr2 = Scion::MediaRange.new('text', 'plain')
+      mr2 = Scion::MediaRange.new('application', 'xml')
       expect(mr1 <=> mr2).to eq(-1)
     end
   end
@@ -249,7 +255,7 @@ describe Scion::MediaRange do
   context '#to_s' do
     it 'returns the string representation of a media range' do
       mt = Scion::MediaRange.new('text', 'plain', 'q' => 0.8, 'format' => 'flowed', 'paged' => nil)
-      expect(mt.to_s).to eq('text/plain; q=0.8; format=flowed; paged')
+      expect(mt.to_s).to eq('text/plain; format=flowed; paged; q=0.8')
     end
 
     it 'omits the q parameter when it is 1.0' do
