@@ -1,24 +1,34 @@
 require 'scion/charset'
-require 'scion/parsers/media_type'
+require 'scion/parsers/basic_rules'
 
 module Scion
-  module Parsers
-
-    # http://tools.ietf.org/html/rfc7231#section-5.3.2
-    class AcceptHeader < Parslet::Parser
-      include MediaTypeRules
-
-      rule(:comma) { str(',') >> sp? }
-
-      rule(:accept) { (media_range >> (comma >> sp? >> media_range).repeat).as(:accept) }
-      root(:accept)
-    end
-
+  class Headers
     # http://tools.ietf.org/html/rfc7231#section-5.3.3
+    class AcceptCharset < Header 'Accept-Charset'
+      attr_reader :charset_ranges
+
+      def initialize(*charset_ranges)
+        @charset_ranges = charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
+      end
+
+      def merge(other)
+        AcceptCharset.new(*(@charset_ranges + other.charset_ranges))
+      end
+
+      def self.parse(s)
+        tree = Parsers::AcceptCharsetHeader.new.parse(s)
+        Parsers::AcceptCharsetHeaderTransform.new.apply(tree)
+      end
+
+      def to_s
+        @charset_ranges.map(&:to_s).join(', ')
+      end
+    end
+  end
+
+  module Parsers
     class AcceptCharsetHeader < Parslet::Parser
       include BasicRules
-
-      rule(:comma) { str(',') >> sp? }
 
       rule(:weight_value) { (digit >> (str('.') >> digit.repeat(0, 3)).maybe).as(:q) }
       rule(:weight) { str(';') >> sp? >> str('q') >> sp? >> str('=') >> sp? >> weight_value >> sp? }
@@ -36,6 +46,5 @@ module Scion
       rule(charset: simple(:c)) { ::Scion::CharsetRange.new(::Scion::Charset.new(c.str)) }
       rule(accept_charset: sequence(:cr)) { ::Scion::Headers::AcceptCharset.new(*cr) }
     end
-
   end
 end

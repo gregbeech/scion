@@ -3,6 +3,8 @@ require 'scion/parsers/basic_rules'
 module Scion
   module Parsers
 
+    # note this uses the rules from https://tools.ietf.org/html/rfc6838 not http://tools.ietf.org/html/rfc7231
+    # because the latter is slightly ambiguous, e.g. a token can include * so */json would parse correctly
     module MediaTypeRules
       include Parslet, BasicRules
 

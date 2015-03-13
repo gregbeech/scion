@@ -25,6 +25,9 @@ module Scion
       rule(:crlf) { cr >> lf }
       rule(:dquote) { str('"') }
 
+      # extras
+      rule(:comma) { str(',') >> sp? }
+
       # http://tools.ietf.org/html/rfc7230#section-3.2.6
       rule(:tchar) { alpha | digit | match(/[!#\$%&'\*\+\-\.\^_`\|~]/) }
       rule(:token) { tchar.repeat(1) }

@@ -1,6 +1,4 @@
 require 'active_support/core_ext/string'
-require 'scion/media_type'
-require 'scion/parsers/headers'
 
 module Scion
   class Headers
@@ -51,8 +49,6 @@ module Scion
 
     alias_method :<<, :add!
 
-    #--------------------------------------------------------------------------
-
     class << self
       def register(klass)
         (@registered ||= {})[klass.const_get(:NAME)] = klass
@@ -78,8 +74,6 @@ module Scion
       end
     end
 
-    #--------------------------------------------------------------------------
-
     class Raw
       attr_reader :name, :value
 
@@ -93,64 +87,8 @@ module Scion
       end
     end
 
-    class Accept < Header 'Accept'
-      attr_reader :media_ranges
-
-      def initialize(*media_ranges)
-        @media_ranges = media_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
-      end
-
-      def merge(other)
-        Accept.new(*(@media_ranges + other.media_ranges))
-      end
-
-      def self.parse(s)
-        tree = Parsers::AcceptHeader.new.parse(s)
-        tree = Parsers::MediaTypeTransform.new.apply(tree)
-        Accept.new(*tree[:accept])
-      end
-
-      def to_s
-        @media_ranges.map(&:to_s).join(', ')
-      end
-    end
-
-    class AcceptCharset < Header 'Accept-Charset'
-      attr_reader :charset_ranges
-
-      def initialize(*charset_ranges)
-        @charset_ranges = charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
-      end
-
-      def merge(other)
-        AcceptCharset.new(*(@charset_ranges + other.charset_ranges))
-      end
-
-      def self.parse(s)
-        tree = Parsers::AcceptCharsetHeader.new.parse(s)
-        Parsers::AcceptCharsetHeaderTransform.new.apply(tree)
-      end
-
-      def to_s
-        @charset_ranges.map(&:to_s).join(', ')
-      end
-    end
-
-    class ContentType < Header 'Content-Type'
-      attr_reader :content_type
-
-      def initialize(content_type)
-        @content_type = content_type
-      end
-
-      def self.parse(s)
-        ContentType.new(Scion::ContentType.parse(s))
-      end
-
-      def to_s
-        @content_type.to_s
-      end
-    end
-
+    autoload :Accept, 'scion/headers/accept'
+    autoload :AcceptCharset, 'scion/headers/accept_charset'
+    autoload :ContentType, 'scion/headers/content_type'
   end
 end
