@@ -16,7 +16,6 @@ module Scion
       rule(:slash) { str('/') }
       rule(:subtype) { restricted_name.as(:subtype) >> sp? }
 
-      rule(:semicolon) { str(';') >> sp? }
       rule(:param_name) { restricted_name.as(:param_name) >> sp? }
       rule(:equals) { str('=') >> sp? }
       rule(:param_value) { token.as(:param_value) >> sp? } # not quite correct but probably correct enough

@@ -29,7 +29,7 @@ module Scion
   module Parsers
     class AcceptHeader < Parslet::Parser
       include MediaTypeRules
-      rule(:accept) { (media_range >> (comma >> sp? >> media_range).repeat).as(:accept) }
+      rule(:accept) { (media_range >> (comma >> media_range).repeat).as(:accept) }
       root(:accept)
     end
 

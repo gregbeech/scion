@@ -1,6 +1,7 @@
 require 'scion/charset'
 require 'scion/headers'
 require 'scion/parsers/basic_rules'
+require 'scion/parsers/header_rules'
 
 module Scion
   class Headers
@@ -29,16 +30,11 @@ module Scion
 
   module Parsers
     class AcceptCharsetHeader < Parslet::Parser
-      include BasicRules
-
-      rule(:weight_value) { (digit >> (str('.') >> digit.repeat(0, 3)).maybe).as(:q) }
-      rule(:weight) { str(';') >> sp? >> str('q') >> sp? >> str('=') >> sp? >> weight_value >> sp? }
-
-      rule(:charset) { token.as(:charset) }
-      rule(:wildcard) { str('*') }
-      rule(:charset_range) { (charset | wildcard.as(:charset)) >> sp? >> weight.maybe }
-
-      rule(:accept_charset) { (charset_range >> (comma >> sp? >> charset_range).repeat).as(:accept_charset) }
+      include BasicRules, WeightRules
+      rule(:charset) { token.as(:charset) >> sp? }
+      rule(:wildcard) { str('*') >> sp? }
+      rule(:charset_range) { (charset | wildcard.as(:charset)) >> weight.maybe }
+      rule(:accept_charset) { (charset_range >> (comma >> charset_range).repeat).as(:accept_charset) }
       root(:accept_charset)
     end
 
