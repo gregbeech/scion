@@ -24,8 +24,8 @@ module Scion
     class AcceptCharsetHeader < Parslet::Parser
       include BasicRules, WeightRules
       rule(:charset) { token.as(:charset) >> sp? }
-      rule(:wildcard) { str('*') >> sp? }
-      rule(:charset_range) { (charset | wildcard.as(:charset)) >> weight.maybe }
+      rule(:wildcard) { str('*').as(:charset) >> sp? }
+      rule(:charset_range) { (charset | wildcard) >> weight.maybe }
       rule(:accept_charset) { (charset_range >> (comma >> charset_range).repeat).as(:accept_charset) }
       root(:accept_charset)
     end
@@ -34,6 +34,7 @@ module Scion
       rule(charset: simple(:c), q: simple(:q)) { CharsetRange.new(c.str, q.str) }
       rule(charset: simple(:c)) { CharsetRange.new(c.str) }
       rule(accept_charset: sequence(:cr)) { Headers::AcceptCharset.new(*cr) }
+      rule(accept_charset: simple(:cr)) { Headers::AcceptCharset.new(cr) }
     end
   end
 end

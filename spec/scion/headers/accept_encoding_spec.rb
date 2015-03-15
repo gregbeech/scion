@@ -25,4 +25,16 @@ describe Scion::Headers::AcceptEncoding do
     end
   end
 
+  context '#merge' do
+    it 'can merge two headers with the right precedence' do
+      h1 = Scion::Headers::AcceptEncoding.parse('identity; q=0.5')
+      h2 = Scion::Headers::AcceptEncoding.parse('gzip;q=1.0, *;q=0')
+      header = h1.merge(h2)
+      expect(header.coding_ranges.size).to eq(3)
+      expect(header.coding_ranges[0].to_s).to eq('gzip')
+      expect(header.coding_ranges[1].to_s).to eq('identity; q=0.5')
+      expect(header.coding_ranges[2].to_s).to eq('*; q=0.0')
+    end
+  end
+
 end

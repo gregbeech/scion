@@ -13,6 +13,7 @@ module Scion
       rule(:digit) { match(/[0-9]/) }
       rule(:hexdig) { match(/[a-f0-9]/i)}
       rule(:vchar) { match(/[\u0021-\u007e]/) }
+      rule(:alphanum) { alpha | digit }
 
       rule(:sp) { str(' ') }
       rule(:sp?) { sp.repeat }

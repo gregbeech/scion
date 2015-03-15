@@ -27,6 +27,7 @@ module Scion
 
     class AcceptHeaderTransform < MediaTypeTransform
       rule(accept: sequence(:mr)) { Headers::Accept.new(*mr) }
+      rule(accept: simple(:mr)) { Headers::Accept.new(mr) }
     end
   end
 end

@@ -24,11 +24,11 @@ module Scion
     class AcceptEncodingHeader < Parslet::Parser
       include BasicRules, WeightRules
       %w(identity compress x-compress deflate gzip x-gzip).each do |c|
-        rule(c.tr('-', '_').to_sym) { str(c) >> sp? }
+        rule(c.tr('-', '_').to_sym) { str(c).as(:coding) >> sp? }
       end
       rule(:coding) { compress | x_compress | deflate | gzip | x_gzip }
-      rule(:wildcard) { str('*') >> sp? }
-      rule(:coding_range) { (coding | identity | wildcard).as(:coding) >> weight.maybe }
+      rule(:wildcard) { str('*').as(:coding) >> sp? }
+      rule(:coding_range) { (coding | identity | wildcard) >> weight.maybe }
       rule(:accept_encoding) { (coding_range >> (comma >> coding_range).repeat).maybe.as(:accept_encoding) }
       root(:accept_encoding)
     end
