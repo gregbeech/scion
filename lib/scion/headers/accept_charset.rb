@@ -6,24 +6,16 @@ require 'scion/parsers/header_rules'
 module Scion
   class Headers
     # http://tools.ietf.org/html/rfc7231#section-5.3.3
-    class AcceptCharset < Header 'Accept-Charset'
-      attr_reader :charset_ranges
-
+    class AcceptCharset < ListHeader 'Accept-Charset'
       def initialize(*charset_ranges)
-        @charset_ranges = charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
+        super(charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!)
       end
 
-      def merge(other)
-        AcceptCharset.new(*(@charset_ranges + other.charset_ranges))
-      end
+      alias_method :charset_ranges, :values
 
       def self.parse(s)
         tree = Parsers::AcceptCharsetHeader.new.parse(s)
         Parsers::AcceptCharsetHeaderTransform.new.apply(tree)
-      end
-
-      def to_s
-        @charset_ranges.map(&:to_s).join(', ')
       end
     end
   end

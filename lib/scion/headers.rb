@@ -55,7 +55,7 @@ module Scion
       end
 
       def header_class(name)
-        @registered[name]
+        (@registered || {})[name]
       end
 
       def Header(name)
@@ -70,6 +70,26 @@ module Scion
         end
         Headers.const_set("#{name.tr('-', '_').classify}Header", klass)
         klass.const_set(:NAME, name)
+        klass
+      end
+
+      def ListHeader(name)
+        klass = Header(name)
+        klass.class_eval do
+          attr_reader :values
+
+          def initialize(values)
+            @values = values
+          end
+
+          def merge(other)
+            self.class.new(*(@values + other.values))
+          end
+
+          def to_s
+            @values.map(&:to_s).join(', ')
+          end
+        end
         klass
       end
     end
@@ -87,8 +107,8 @@ module Scion
       end
     end
 
-    autoload :Accept, 'scion/headers/accept'
-    autoload :AcceptCharset, 'scion/headers/accept_charset'
-    autoload :ContentType, 'scion/headers/content_type'
+    [:Accept, :AcceptCharset, :AcceptEncoding, :ContentType].each do |sym|
+      autoload sym, "scion/headers/#{sym.to_s.underscore}"
+    end
   end
 end

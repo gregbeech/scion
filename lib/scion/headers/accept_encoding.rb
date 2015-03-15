@@ -6,24 +6,16 @@ require 'scion/parsers/header_rules'
 module Scion
   class Headers
     # http://tools.ietf.org/html/rfc7231#section-5.3.4
-    class AcceptEncoding < Header 'Accept-Encoding'
-      attr_reader :coding_ranges
-
+    class AcceptEncoding < ListHeader 'Accept-Encoding'
       def initialize(*coding_ranges)
-        @coding_ranges = coding_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!
+        super(coding_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!)
       end
 
-      def merge(other)
-        AcceptEncoding.new(*(@coding_ranges + other.coding_ranges))
-      end
+      alias_method :coding_ranges, :values
 
       def self.parse(s)
         tree = Parsers::AcceptEncodingHeader.new.parse(s)
         Parsers::AcceptEncodingHeaderTransform.new.apply(tree)
-      end
-
-      def to_s
-        @coding_ranges.map(&:to_s).join(', ')
       end
     end
   end
