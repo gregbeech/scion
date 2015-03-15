@@ -30,9 +30,20 @@ module Scion
       rule(:tchar) { alpha | digit | match(/[!#\$%&'\*\+\-\.\^_`\|~]/) }
       rule(:token) { tchar.repeat(1) }
 
+      rule(:obs_text) { match(/[\u0080-\u00ff]/)}
+      rule(:qdtext) { htab | sp | match(/[\u0021\u0023-\u005b\u005d-\u007e]/) | obs_text }
+      rule(:quoted_pair) { str('\\') >> (htab | sp | vchar | obs_text) }
+      rule(:quoted_string) { (dquote >> (qdtext | quoted_pair).repeat >> dquote).as(:quoted_string) }
+
       # extras -- TODO: move these into header rules?      
       rule(:comma) { str(',') >> sp? }
       rule(:semicolon) { str(';') >> sp? }
+    end
+
+    class BasicTransform < Parslet::Transform
+      rule(simple(:v)) { v.respond_to?(:str) ? v.str : v }
+      
+      rule(quoted_string: simple(:qs)) { qs[1..-2].gsub(/\\(.)/, '\1') }
     end
     
   end
