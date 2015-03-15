@@ -19,12 +19,17 @@ module Scion
       rule(:sp?) { sp.repeat }
       rule(:htab) { str("\t") }
       rule(:wsp) { sp | htab }
-      rule(:lwsp?) { (crlf.maybe >> wsp).repeat }
+      rule(:lwsp) { (crlf.maybe >> wsp).repeat }
 
       rule(:cr) { str("\r") }
       rule(:lf) { str("\n") }
       rule(:crlf) { cr >> lf }
       rule(:dquote) { str('"') }
+
+      # http://tools.ietf.org/html/rfc7230#section-3.2.3
+      rule(:ows) { wsp.repeat }
+      rule(:rws) { wsp.repeat(1) }
+      rule(:bws) { wsp.repeat }
 
       # http://tools.ietf.org/html/rfc7230#section-3.2.6
       rule(:tchar) { alpha | digit | match(/[!#\$%&'\*\+\-\.\^_`\|~]/) }

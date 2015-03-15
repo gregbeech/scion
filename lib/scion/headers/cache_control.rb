@@ -1,8 +1,11 @@
 require 'scion/headers'
 require 'scion/parsers/header_rules'
+require 'scion/quoted_string'
 
 module Scion
   class CacheDirective
+    using QuotedString
+
     attr_reader :name, :value
 
     def initialize(name, value = nil)
@@ -12,16 +15,8 @@ module Scion
 
     def to_s
       s = @name.dup
-      s << '=' << quote(@value) if @value
+      s << '=' << @value.quote if @value
       s
-    end
-
-    private
-
-    # TODO: Extract this out to somewhere more useful
-    def quote(s)
-      qs = s.gsub(/([\\"])/, '\\\\\1')
-      s == qs ? s : %{"#{qs}"}
     end
   end
 
