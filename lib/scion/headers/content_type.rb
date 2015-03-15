@@ -1,5 +1,5 @@
 require 'scion/headers'
-require 'scion/parsers'
+require 'scion/media_type'
 
 module Scion
   class Headers

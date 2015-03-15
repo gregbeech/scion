@@ -1,9 +1,28 @@
-require 'scion/language'
 require 'scion/headers'
-require 'scion/parsers/basic_rules'
 require 'scion/parsers/header_rules'
 
 module Scion
+  class LanguageRange
+    attr_reader :language, :q
+
+    DEFAULT_Q = 1.0
+
+    def initialize(language, q = DEFAULT_Q)
+      @language = language
+      @q = Float(q) || DEFAULT_Q
+    end
+
+    def <=>(other)
+      @q <=> other.q
+    end
+
+    def to_s
+      s = @language.dup
+      s << "; q=#{@q}" if @q != DEFAULT_Q
+      s
+    end
+  end
+
   class Headers
     # http://tools.ietf.org/html/rfc7231#section-5.3.5
     class AcceptLanguage < ListHeader 'Accept-Language'

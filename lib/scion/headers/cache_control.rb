@@ -1,33 +1,31 @@
 require 'scion/headers'
-require 'scion/parsers/basic_rules'
 require 'scion/parsers/header_rules'
 
 module Scion
-  class Headers
+  class CacheDirective
+    attr_reader :name, :value
 
-    class CacheDirective
-      attr_reader :name, :value
-
-      def initialize(name, value = nil)
-        @name = name
-        @value = value
-      end
-
-      def to_s
-        s = @name.dup
-        s << '=' << quote(@value) if @value
-        s
-      end
-
-      private
-
-      # TODO: Extract this out to somewhere more useful
-      def quote(s)
-        qs = s.gsub(/([\\"])/, '\\\\\1')
-        s == qs ? s : %{"#{qs}"}
-      end
+    def initialize(name, value = nil)
+      @name = name
+      @value = value
     end
 
+    def to_s
+      s = @name.dup
+      s << '=' << quote(@value) if @value
+      s
+    end
+
+    private
+
+    # TODO: Extract this out to somewhere more useful
+    def quote(s)
+      qs = s.gsub(/([\\"])/, '\\\\\1')
+      s == qs ? s : %{"#{qs}"}
+    end
+  end
+
+  class Headers
     # http://tools.ietf.org/html/rfc7234#section-5.2
     class CacheControl < ListHeader 'Cache-Control'
       def initialize(*directives)
@@ -54,8 +52,8 @@ module Scion
     end
 
     class CacheControlHeaderTransform < BasicTransform
-      rule(directive: { name: simple(:n), value: simple(:v) }) { Headers::CacheDirective.new(n, v) }
-      rule(directive: { name: simple(:n) }) { Headers::CacheDirective.new(n) }
+      rule(directive: { name: simple(:n), value: simple(:v) }) { CacheDirective.new(n, v) }
+      rule(directive: { name: simple(:n) }) { CacheDirective.new(n) }
       rule(cache_control: sequence(:d)) { Headers::CacheControl.new(*d) }
       rule(cache_control: simple(:d)) { Headers::CacheControl.new(d) }
     end

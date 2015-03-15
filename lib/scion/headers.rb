@@ -107,7 +107,7 @@ module Scion
       end
     end
 
-    [:Accept, :AcceptCharset, :AcceptEncoding, :ContentType].each do |sym|
+    [:Accept, :AcceptCharset, :AcceptEncoding, :CacheControl, :ContentType].each do |sym|
       autoload sym, "scion/headers/#{sym.to_s.underscore}"
     end
   end
