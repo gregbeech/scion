@@ -1,6 +1,6 @@
-require 'scion/parsers/basic_rules'
+require 'xenon/parsers/basic_rules'
 
-module Scion
+module Xenon
   module Parsers
 
     # http://tools.ietf.org/html/rfc7231#section-5.3.1

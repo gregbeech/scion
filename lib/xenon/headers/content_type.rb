@@ -1,7 +1,7 @@
-require 'scion/headers'
-require 'scion/media_type'
+require 'xenon/headers'
+require 'xenon/media_type'
 
-module Scion
+module Xenon
   class Headers
     # http://tools.ietf.org/html/rfc7231#section-3.1.1.5
     class ContentType < Header 'Content-Type'
@@ -12,7 +12,7 @@ module Scion
       end
 
       def self.parse(s)
-        ContentType.new(Scion::ContentType.parse(s))
+        ContentType.new(Xenon::ContentType.parse(s))
       end
 
       def to_s

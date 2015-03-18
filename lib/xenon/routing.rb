@@ -1,4 +1,4 @@
-module Scion
+module Xenon
   module Routing
 
     module RouteDirectives

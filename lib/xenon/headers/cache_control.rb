@@ -1,8 +1,8 @@
-require 'scion/headers'
-require 'scion/parsers/header_rules'
-require 'scion/quoted_string'
+require 'xenon/headers'
+require 'xenon/parsers/header_rules'
+require 'xenon/quoted_string'
 
-module Scion
+module Xenon
   class CacheDirective
     using QuotedString
 

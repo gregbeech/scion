@@ -1,4 +1,4 @@
-module Scion
+module Xenon
   module QuotedString
     refine String do
       def quote

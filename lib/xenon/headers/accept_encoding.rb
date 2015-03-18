@@ -1,7 +1,7 @@
-require 'scion/headers'
-require 'scion/parsers/header_rules'
+require 'xenon/headers'
+require 'xenon/parsers/header_rules'
 
-module Scion
+module Xenon
   class ContentCodingRange
     attr_reader :coding, :q
 

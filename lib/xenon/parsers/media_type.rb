@@ -1,6 +1,6 @@
-require 'scion/parsers/basic_rules'
+require 'xenon/parsers/basic_rules'
 
-module Scion
+module Xenon
   module Parsers
 
     # note this uses the rules from https://tools.ietf.org/html/rfc6838 not http://tools.ietf.org/html/rfc7231
@@ -44,8 +44,8 @@ module Scion
       rule(param_name: simple(:n), param_value: simple(:v)) { [n.str, v.str] }
       rule(param_name: simple(:n)) { [n.str, nil] }
       rule(type: simple(:t), subtype: simple(:s), params: subtree(:p)) { { type: t.str, subtype: s.str, params: Hash[p] } }
-      rule(media_type: subtree(:mt)) { ::Scion::MediaType.new(mt[:type], mt[:subtype], mt[:params])}
-      rule(media_range: subtree(:mr)) { ::Scion::MediaRange.new(mr[:type], mr[:subtype], mr[:params])}
+      rule(media_type: subtree(:mt)) { ::Xenon::MediaType.new(mt[:type], mt[:subtype], mt[:params])}
+      rule(media_range: subtree(:mr)) { ::Xenon::MediaRange.new(mr[:type], mr[:subtype], mr[:params])}
     end
 
   end

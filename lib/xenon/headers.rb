@@ -1,6 +1,6 @@
 require 'active_support/core_ext/string'
 
-module Scion
+module Xenon
   class Headers
     include Enumerable
 
@@ -108,7 +108,7 @@ module Scion
     end
 
     [:Accept, :AcceptCharset, :AcceptEncoding, :CacheControl, :ContentType].each do |sym|
-      autoload sym, "scion/headers/#{sym.to_s.underscore}"
+      autoload sym, "xenon/headers/#{sym.to_s.underscore}"
     end
   end
 end

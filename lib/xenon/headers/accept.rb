@@ -1,7 +1,7 @@
-require 'scion/headers'
-require 'scion/parsers/media_type'
+require 'xenon/headers'
+require 'xenon/parsers/media_type'
 
-module Scion
+module Xenon
   class Headers
     # http://tools.ietf.org/html/rfc7231#section-5.3.2
     class Accept < ListHeader 'Accept'

@@ -1,6 +1,6 @@
 require 'parslet'
 
-module Scion
+module Xenon
   module Parsers
 
     module BasicRules

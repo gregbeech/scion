@@ -1,7 +1,7 @@
-require 'scion/errors'
-require 'scion/parsers/media_type'
+require 'xenon/errors'
+require 'xenon/parsers/media_type'
 
-module Scion
+module Xenon
 
   class MediaType
     attr_reader :type, :subtype, :params
@@ -16,7 +16,7 @@ module Scion
       tree = Parsers::MediaType.new.parse(s)
       Parsers::MediaTypeTransform.new.apply(tree)
     rescue Parslet::ParseFailed
-      raise Scion::ParseError.new("Invalid media type (#{s})")
+      raise Xenon::ParseError.new("Invalid media type (#{s})")
     end
 
     %w(application audio image message multipart text video).each do |type|
@@ -98,7 +98,7 @@ module Scion
       tree = Parsers::MediaRange.new.parse(s)
       Parsers::MediaTypeTransform.new.apply(tree)
     rescue Parslet::ParseFailed
-      raise Scion::ParseError.new("Invalid media range (#{s})")
+      raise Xenon::ParseError.new("Invalid media range (#{s})")
     end
 
     def <=>(other)
