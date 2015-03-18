@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
+<<<<<<< HEAD
 gem 'activesupport'
 gem 'parslet', '~> 1.7'
 gem 'rack'
@@ -13,3 +14,6 @@ group :development, :test do
   gem 'rspec'
   gem 'guard-rspec', :require => false
 end
+=======
+gemspec
+>>>>>>> Added gem files for xenon lib

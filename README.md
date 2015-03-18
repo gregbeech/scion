@@ -1,55 +1,32 @@
-# Scion
+# Xenon
 
-A Ruby HTTP framework inspired by [Spray][spray].
+An HTTP framework for building RESTful APIs, inspired by [Spray][spray].
 
-This is a just-for-fun proof of concept to see if it's possible to create a Spray-like routing DSL in Ruby, and to see whether it would feel "Rubyish". It's pretty small (a few hundred lines of code) but does work, albeit synchronously rather than asynchronously like spray.
-A basic app looks something like this, where the route is defined as a tree:
+## Installation
 
-```ruby
-require 'scion'
+Add this line to your application's Gemfile:
 
-class MyApp < Scion::Api
+    gem 'xenon'
 
-  def route
-    path '/' do
-      get do        
-        query_hash do |query|
-          complete 200, { hello: 'World' }.merge(query)
-        end
-      end
-      post do
-        form_hash do |form|
-          complete 201, { created: 'OK' }.merge(form)
-        end
-      end
-    end
-    path_prefix '/users' do
-      path_end do
-        get do
-          complete 200, [{ user_id: 123 }, { user_id: 456 }]
-        end
-      end
-      path '/([0-9]+)' do |user_id|
-        get do
-          complete 200, { user_id: user_id }
-        end
-      end
-    end
-  end
+And then execute:
 
-end
-```
+    $ bundle
 
-Thanks to the tree structure, it can respond with appropriate status codes, e.g. if you send `PATCH /` then it knows the path is valid but the method isn't so it returns `405 Method Not Allowed`.
+Or install it yourself as:
 
-I should probably write some tests soon, but the whole thing is so unstable at the moment that it doesn't seem worth it yet.
+    $ gem install xenon
 
-To run it and start messing around just do:
+## Usage
 
-```
-$ bundle install
-$ bundle exec shotgun
-```
+At the moment I probably wouldn't use this gem for anything you actually depend on because it's _very_ early in its lifecycle. However, feel free to have a play around, raise bugs, and contribute if you're interested.
+
+## Contributing
+
+1. Fork it ( https://github.com/[my-github-username]/xenon/fork )
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create a new Pull Request
 
 
 [spray]: http://spray.io/ "spray"
