@@ -68,7 +68,7 @@ module Xenon
 
   module Parsers
     class AuthorizationHeader < Parslet::Parser
-      include BasicRules
+      include HeaderRules
       rule(:token68) { ((alpha | digit | match(/[\-\._~\+\/]/)) >> str('=').repeat).repeat(1).as(:token) }
       rule(:auth_scheme) { token.as(:auth_scheme) }
       rule(:name) { token.as(:name) }
@@ -80,7 +80,7 @@ module Xenon
       root(:authorization)
     end
 
-    class AuthorizationHeaderTransform < BasicTransform
+    class AuthorizationHeaderTransform < HeaderTransform
       rule(auth_param: { name: simple(:n), value: simple(:v) }) { [n, v] }
       rule(auth_params: subtree(:x)) { { foo: x } }
       rule(auth_scheme: simple(:s), token: simple(:t)) { 

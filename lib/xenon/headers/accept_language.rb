@@ -41,7 +41,7 @@ module Xenon
 
   module Parsers
     class AcceptLanguageHeader < Parslet::Parser
-      include BasicRules, WeightRules
+      include HeaderRules
       rule(:language) { (alpha.repeat(1, 8) >> (str('-') >> alphanum.repeat(1, 8)).maybe).as(:language) >> sp? }
       rule(:wildcard) { str('*').as(:language) >> sp? }
       rule(:language_range) { (language | wildcard) >> weight.maybe }

@@ -38,7 +38,7 @@ module Xenon
 
   module Parsers
     class CacheControlHeader < Parslet::Parser
-      include BasicRules
+      include HeaderRules
       rule(:name) { token.as(:name) }
       rule(:value) { str('=') >> (token | quoted_string).as(:value) }
       rule(:directive) { (name >> value.maybe).as(:directive) >> sp? }
@@ -46,7 +46,7 @@ module Xenon
       root(:cache_control)
     end
 
-    class CacheControlHeaderTransform < BasicTransform
+    class CacheControlHeaderTransform < HeaderTransform
       rule(directive: { name: simple(:n), value: simple(:v) }) { CacheDirective.new(n, v) }
       rule(directive: { name: simple(:n) }) { CacheDirective.new(n) }
       rule(cache_control: sequence(:d)) { Headers::CacheControl.new(*d) }

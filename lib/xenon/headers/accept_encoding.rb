@@ -41,7 +41,7 @@ module Xenon
 
   module Parsers
     class AcceptEncodingHeader < Parslet::Parser
-      include BasicRules, WeightRules
+      include HeaderRules
       %w(identity compress x-compress deflate gzip x-gzip).each do |c|
         rule(c.tr('-', '_').to_sym) { str(c).as(:coding) >> sp? }
       end

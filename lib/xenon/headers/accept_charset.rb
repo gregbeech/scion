@@ -41,7 +41,7 @@ module Xenon
 
   module Parsers
     class AcceptCharsetHeader < Parslet::Parser
-      include BasicRules, WeightRules
+      include HeaderRules
       rule(:charset) { token.as(:charset) >> sp? }
       rule(:wildcard) { str('*').as(:charset) >> sp? }
       rule(:charset_range) { (charset | wildcard) >> weight.maybe }

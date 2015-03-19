@@ -4,6 +4,52 @@
 
 An HTTP framework for building RESTful APIs, inspired by [Spray][spray].
 
+At the moment I probably wouldn't use this gem for anything you actually depend on because it's _very_ early in its lifecycle. However, this is a flavour of what's in here.
+
+## HTTP Model
+
+A set of model objects for the HTTP protocol which can parse and format the strings you typically get into proper objects you can work with. At the moment this covers key things like media types and the most common headers, but it will expand to cover the whole protocol. You can use the model by itself without any other parts of the library.
+
+This is how things tend to look:
+
+```ruby
+accept = Scion::Headers::Accept.parse('application/json, application/*; q=0.5')
+accept.media_ranges.first.json? #=> true
+accept.media_ranges.last.q      #=> 0.5
+# etc.
+```
+
+## Routing
+
+A tree-based routing approach based on Spray, giving you great flexibility in building APIs and without the need to write extensions, helpers, etc. because everything is a directive and you extend it by simply writing directives! This is highly unstable and in flux at the moment.
+
+This is the kind of syntax I'm aiming for which _sort of_ works, but needs a load of changes to allow composition so what's there now is really just a proof of concept of the basic syntax rather than anything close to useful.
+
+```ruby
+path_prefix '/users' do
+  path_end do
+    get do
+      complete 200, User.all
+    end
+    post do
+      body as: User do |user|
+        user.save!
+        respond_with_header 'Location' => "/users/#{user.id}" do
+          complete 201, user
+        end
+      end
+    end
+  end
+  path /[0-9]+/ do |user_id|
+    get do
+      complete 200, User.get_by_id(user_id)
+    end
+  end
+end
+```
+
+Of course, it'll do all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -18,13 +64,9 @@ Or install it yourself as:
 
     $ gem install xenon
 
-## Usage
-
-At the moment I probably wouldn't use this gem for anything you actually depend on because it's _very_ early in its lifecycle. However, feel free to have a play around, raise bugs, and contribute if you're interested.
-
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/xenon/fork )
+1. Fork it ( https://github.com/gregbeech/xenon/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
