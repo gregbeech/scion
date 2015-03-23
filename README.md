@@ -13,9 +13,9 @@ A set of model objects for the HTTP protocol which can parse and format the stri
 This is how things tend to look:
 
 ```ruby
-accept = Scion::Headers::Accept.parse('application/json, application/*; q=0.5')
-accept.media_ranges.first.json? #=> true
-accept.media_ranges.last.q      #=> 0.5
+accept = Xenon::Headers::Accept.parse('application/json, application/*; q=0.5')
+accept.media_ranges.first.media_type.json? #=> true
+accept.media_ranges.last.q #=> 0.5
 # etc.
 ```
 
@@ -26,7 +26,7 @@ A tree-based routing approach based on Spray, giving you great flexibility in bu
 This is the kind of syntax I'm aiming for which _sort of_ works, but needs a load of changes to allow composition so what's there now is really just a proof of concept of the basic syntax rather than anything close to useful.
 
 ```ruby
-path_prefix '/users' do
+path_prefix 'users' do
   path_end do
     get do
       complete 200, User.all

@@ -21,6 +21,17 @@ module Xenon
       rule(:comment) { (str('(') >> (ctext | quoted_pair | comment).repeat >> str(')')).as(:comment) }
     end
 
+    module ETagHeaderRules
+      include Parslet, HeaderRules
+
+      # http://tools.ietf.org/html/rfc7232#section-2.3
+      rule(:wildcard) { str('*').as(:wildcard) }
+      rule(:weak) { str('W/').as(:weak) }
+      rule(:etagc) { str('!') | match(/[\u0023-\u007e#-~]/) | obs_text }
+      rule(:opaque_tag) { dquote >> etagc.repeat.as(:opaque_tag) >> dquote }
+      rule(:etag) { (weak.maybe >> opaque_tag).as(:etag) }
+    end
+
     class HeaderTransform < BasicTransform
       using QuotedString
 
