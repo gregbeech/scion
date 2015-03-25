@@ -74,7 +74,7 @@ module Xenon
       rule(:name) { token.as(:name) }
       rule(:value) { token.as(:value) }
       rule(:auth_param) { (name >> bws >> str('=') >> bws >> (token | quoted_string).as(:value)).as(:auth_param) } 
-      rule(:auth_params) { (auth_param.maybe >> (ows >> comma >> ows >> auth_param).repeat).as(:auth_params) }
+      rule(:auth_params) { (auth_param.maybe >> (ows >> list_sep >> ows >> auth_param).repeat).as(:auth_params) }
       rule(:credentials) { auth_scheme >> sp >> (token68 | auth_params) }
       rule(:authorization) { credentials.as(:authorization) }
       root(:authorization)

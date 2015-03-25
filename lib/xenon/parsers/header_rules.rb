@@ -6,19 +6,20 @@ module Xenon
 
     module HeaderRules
       include Parslet, BasicRules
-      
-      # http://tools.ietf.org/html/rfc7231#section-5.3.1
-      rule(:weight_value) { (digit >> (str('.') >> digit.repeat(0, 3)).maybe).as(:q) }
-      rule(:weight) { semicolon >> str('q') >> sp? >> str('=') >> sp? >> weight_value >> sp? }
 
       # http://tools.ietf.org/html/rfc7230#section-3.2.6
+      rule(:list_sep) { str(',') >> sp? }
+      rule(:param_sep) { str(';') >> sp? }
       rule(:obs_text) { match(/[\u0080-\u00ff]/)}
       rule(:qdtext) { htab | sp | match(/[\u0021\u0023-\u005b\u005d-\u007e]/) | obs_text }
       rule(:quoted_pair) { str('\\') >> (htab | sp | vchar | obs_text) }
       rule(:quoted_string) { (dquote >> (qdtext | quoted_pair).repeat >> dquote).as(:quoted_string) }
-
       rule(:ctext) { htab | sp | match(/[\u0021-\u0027\u002a-\u005b\u005d-\u007e]/) | obs_text }
       rule(:comment) { (str('(') >> (ctext | quoted_pair | comment).repeat >> str(')')).as(:comment) }
+    
+      # http://tools.ietf.org/html/rfc7231#section-5.3.1
+      rule(:weight_value) { (digit >> (str('.') >> digit.repeat(0, 3)).maybe).as(:q) }
+      rule(:weight) { param_sep >> str('q') >> sp? >> str('=') >> sp? >> weight_value >> sp? }
     end
 
     module ETagHeaderRules

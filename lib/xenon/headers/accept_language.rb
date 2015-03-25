@@ -45,13 +45,13 @@ module Xenon
       rule(:language) { (alpha.repeat(1, 8) >> (str('-') >> alphanum.repeat(1, 8)).maybe).as(:language) >> sp? }
       rule(:wildcard) { str('*').as(:language) >> sp? }
       rule(:language_range) { (language | wildcard) >> weight.maybe }
-      rule(:accept_language) { (language_range >> (comma >> language_range).repeat).as(:accept_language) }
+      rule(:accept_language) { (language_range >> (list_sep >> language_range).repeat).as(:accept_language) }
       root(:accept_language)
     end
 
-    class AcceptLanguageHeaderTransform < Parslet::Transform
-      rule(language: simple(:e), q: simple(:q)) { LanguageRange.new(e.str, q.str) }
-      rule(language: simple(:e)) { LanguageRange.new(e.str) }
+    class AcceptLanguageHeaderTransform < HeaderTransform
+      rule(language: simple(:e), q: simple(:q)) { LanguageRange.new(e, q) }
+      rule(language: simple(:e)) { LanguageRange.new(e) }
       rule(accept_language: sequence(:lr)) { Headers::AcceptLanguage.new(*lr) }
       rule(accept_language: simple(:lr)) { Headers::AcceptLanguage.new(lr) }
     end

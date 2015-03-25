@@ -16,10 +16,11 @@ module Xenon
       rule(:slash) { str('/') }
       rule(:subtype) { restricted_name.as(:subtype) >> sp? }
 
+      rule(:param_sep) { str(';') >> sp? }
       rule(:param_name) { restricted_name.as(:param_name) >> sp? }
       rule(:equals) { str('=') >> sp? }
       rule(:param_value) { token.as(:param_value) >> sp? } # not quite correct but probably correct enough
-      rule(:param) { semicolon >> param_name >> (equals >> param_value).maybe >> sp? }
+      rule(:param) { param_sep >> param_name >> (equals >> param_value).maybe >> sp? }
       rule(:params) { param.repeat.as(:params) }
 
       rule(:media_type) { (type >> slash >> subtype >> params).as(:media_type) >> sp? }

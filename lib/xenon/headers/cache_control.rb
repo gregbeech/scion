@@ -42,7 +42,7 @@ module Xenon
       rule(:name) { token.as(:name) }
       rule(:value) { str('=') >> (token | quoted_string).as(:value) }
       rule(:directive) { (name >> value.maybe).as(:directive) >> sp? }
-      rule(:cache_control) { (directive >> (comma >> directive).repeat).as(:cache_control) }
+      rule(:cache_control) { (directive >> (list_sep >> directive).repeat).as(:cache_control) }
       root(:cache_control)
     end
 

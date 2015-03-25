@@ -48,13 +48,13 @@ module Xenon
       rule(:coding) { compress | x_compress | deflate | gzip | x_gzip }
       rule(:wildcard) { str('*').as(:coding) >> sp? }
       rule(:coding_range) { (coding | identity | wildcard) >> weight.maybe }
-      rule(:accept_encoding) { (coding_range >> (comma >> coding_range).repeat).maybe.as(:accept_encoding) }
+      rule(:accept_encoding) { (coding_range >> (list_sep >> coding_range).repeat).maybe.as(:accept_encoding) }
       root(:accept_encoding)
     end
 
-    class AcceptEncodingHeaderTransform < Parslet::Transform
-      rule(coding: simple(:c), q: simple(:q)) { ContentCodingRange.new(c.str, q.str) }
-      rule(coding: simple(:c)) { ContentCodingRange.new(c.str) }
+    class AcceptEncodingHeaderTransform < HeaderTransform
+      rule(coding: simple(:c), q: simple(:q)) { ContentCodingRange.new(c, q) }
+      rule(coding: simple(:c)) { ContentCodingRange.new(c) }
       rule(accept_encoding: sequence(:er)) { Headers::AcceptEncoding.new(*er) }
       rule(accept_encoding: simple(:cc)) { Headers::AcceptEncoding.new(cc) }
       rule(accept_encoding: nil) { Headers::AcceptEncoding.new }

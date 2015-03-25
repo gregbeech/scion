@@ -45,13 +45,13 @@ module Xenon
       rule(:charset) { token.as(:charset) >> sp? }
       rule(:wildcard) { str('*').as(:charset) >> sp? }
       rule(:charset_range) { (charset | wildcard) >> weight.maybe }
-      rule(:accept_charset) { (charset_range >> (comma >> charset_range).repeat).as(:accept_charset) }
+      rule(:accept_charset) { (charset_range >> (list_sep >> charset_range).repeat).as(:accept_charset) }
       root(:accept_charset)
     end
 
-    class AcceptCharsetHeaderTransform < Parslet::Transform
-      rule(charset: simple(:c), q: simple(:q)) { CharsetRange.new(c.str, q.str) }
-      rule(charset: simple(:c)) { CharsetRange.new(c.str) }
+    class AcceptCharsetHeaderTransform < HeaderTransform
+      rule(charset: simple(:c), q: simple(:q)) { CharsetRange.new(c, q) }
+      rule(charset: simple(:c)) { CharsetRange.new(c) }
       rule(accept_charset: sequence(:cr)) { Headers::AcceptCharset.new(*cr) }
       rule(accept_charset: simple(:cr)) { Headers::AcceptCharset.new(cr) }
     end

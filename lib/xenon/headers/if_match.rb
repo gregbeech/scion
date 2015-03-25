@@ -40,7 +40,7 @@ module Xenon
   module Parsers
     class IfMatchHeader < Parslet::Parser
       include ETagHeaderRules
-      rule(:if_match) { (wildcard | (etag >> (comma >> etag).repeat)).as(:if_match) }
+      rule(:if_match) { (wildcard | (etag >> (list_sep >> etag).repeat)).as(:if_match) }
       root(:if_match)
     end
 

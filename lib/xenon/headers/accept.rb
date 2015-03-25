@@ -20,8 +20,8 @@ module Xenon
 
   module Parsers
     class AcceptHeader < Parslet::Parser
-      include MediaTypeRules
-      rule(:accept) { (media_range >> (comma >> media_range).repeat).as(:accept) }
+      include HeaderRules, MediaTypeRules
+      rule(:accept) { (media_range >> (list_sep >> media_range).repeat).as(:accept) }
       root(:accept)
     end
 
