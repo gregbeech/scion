@@ -40,16 +40,16 @@ module Xenon
   module Parsers
     class IfNoneMatchHeader < Parslet::Parser
       include ETagHeaderRules
-      rule(:if_match) { (wildcard | (etag >> (comma >> etag).repeat)).as(:if_match) }
-      root(:if_match)
+      rule(:if_none_match) { (wildcard | (etag >> (comma >> etag).repeat)).as(:if_none_match) }
+      root(:if_none_match)
     end
 
     class IfNoneMatchHeaderTransform < HeaderTransform
       rule(etag: { opaque_tag: simple(:t), weak: simple(:w) }) { ETag.new(t, weak: true) }
       rule(etag: { opaque_tag: simple(:t) }) { ETag.new(t) }
-      rule(if_match: { wildcard: simple(:w) }) { Headers::IfNoneMatch.new }
-      rule(if_match: sequence(:et)) { Headers::IfNoneMatch.new(*et) }
-      rule(if_match: simple(:et)) { Headers::IfNoneMatch.new(et) }
+      rule(if_none_match: { wildcard: simple(:w) }) { Headers::IfNoneMatch.new }
+      rule(if_none_match: sequence(:et)) { Headers::IfNoneMatch.new(*et) }
+      rule(if_none_match: simple(:et)) { Headers::IfNoneMatch.new(et) }
     end
   end
 end

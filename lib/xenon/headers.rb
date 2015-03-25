@@ -106,9 +106,5 @@ module Xenon
         @value
       end
     end
-
-    %i(Accept AcceptCharset AcceptEncoding CacheControl ContentType UserAgent).each do |sym|
-      autoload sym, "xenon/headers/#{sym.to_s.underscore}"
-    end
   end
 end
