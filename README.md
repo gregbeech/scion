@@ -1,6 +1,6 @@
 # Xenon 
 
-[![Gem Version][fury-badge]][fury] [![Build Status][travis-badge]][travis] [![Code Climate][cc-badge]][cc]
+[![Gem Version][fury-badge]][fury] [![Build Status][travis-badge]][travis] [![Code Climate][cc-badge]][cc] [![Test Coverage][ccc-badge]][ccc]
 
 An HTTP framework for building RESTful APIs, inspired by [Spray][spray].
 
@@ -77,6 +77,8 @@ Or install it yourself as:
 [fury-badge]: https://badge.fury.io/rb/xenon.svg "Gem Version"
 [travis]: https://travis-ci.org/gregbeech/xenon "Xenon at Travis CI"
 [travis-badge]: https://travis-ci.org/gregbeech/xenon.svg "Build Status"
-[cc]: https://codeclimate.com/github/gregbeech/xenon "Xenon at Code Climate"
+[cc]: https://codeclimate.com/github/gregbeech/xenon "Xenon Quality at Code Climate"
 [cc-badge]: https://codeclimate.com/github/gregbeech/xenon/badges/gpa.svg "Code Quality"
+[ccc]: https://codeclimate.com/github/gregbeech/xenon/coverage "Xenon Coverage at Code Climate"
+[ccc-badge]: https://codeclimate.com/github/gregbeech/xenon/badges/coverage.svg "Code Coverage"
 [spray]: http://spray.io/ "spray"
