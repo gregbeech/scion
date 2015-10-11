@@ -32,6 +32,7 @@ module Xenon
       end
     end
 
+    # https://tools.ietf.org/html/rfc7235#section-4.1
     class WwwAuthenticate < ListHeader 'WWW-Authenticate'
       def initialize(*challenges)
         super(challenges)
