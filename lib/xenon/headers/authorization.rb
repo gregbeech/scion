@@ -68,13 +68,7 @@ module Xenon
 
   module Parsers
     class AuthorizationHeader < Parslet::Parser
-      include HeaderRules
-      rule(:token68) { ((alpha | digit | match(/[\-\._~\+\/]/)) >> str('=').repeat).repeat(1).as(:token) }
-      rule(:auth_scheme) { token.as(:auth_scheme) }
-      rule(:name) { token.as(:name) }
-      rule(:value) { token.as(:value) }
-      rule(:auth_param) { (name >> bws >> str('=') >> bws >> (token | quoted_string).as(:value)).as(:auth_param) } 
-      rule(:auth_params) { (auth_param.maybe >> (ows >> list_sep >> ows >> auth_param).repeat).as(:auth_params) }
+      include AuthHeaderRules
       rule(:credentials) { auth_scheme >> sp >> (token68 | auth_params) }
       rule(:authorization) { credentials.as(:authorization) }
       root(:authorization)
@@ -83,10 +77,10 @@ module Xenon
     class AuthorizationHeaderTransform < HeaderTransform
       rule(auth_param: { name: simple(:n), value: simple(:v) }) { [n, v] }
       rule(auth_params: subtree(:x)) { { foo: x } }
-      rule(auth_scheme: simple(:s), token: simple(:t)) { 
+      rule(auth_scheme: simple(:s), token: simple(:t)) {
         case s
         when 'Basic' then BasicCredentials.decode(t)
-        else GenericCredentials.new(s, token: t) 
+        else GenericCredentials.new(s, token: t)
         end
       }
       rule(auth_scheme: simple(:s), auth_params: subtree(:p)) { GenericCredentials.new(s, params: Hash[p]) }
