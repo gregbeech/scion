@@ -9,7 +9,9 @@ engines:
     enabled: true
 
 ratings:
-  - lib/**/*
+  paths:
+    - lib/**/*
+
 exclude_paths:
   - spec/**/*
   - vendor/**/*
