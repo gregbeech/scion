@@ -3,20 +3,33 @@ require 'xenon/parsers/media_type'
 
 module Xenon
 
+  # A media type.
+  #
+  # @see ContentType
+  # @see MediaRange
   class MediaType
     attr_reader :type, :subtype, :params
 
+    # Initializes a new instance of MediaType.
+    #
+    # @param type [String] The main type, e.g. 'application'.
+    # @param subtype [String] The subtype, e.g. 'json'.
+    # @param params [Hash] Any params for the media type; don't use 'q' or 'charset'.
     def initialize(type, subtype, params = {})
       @type = type
       @subtype = subtype
       @params = params
     end
 
+    # Parses a media type.
+    #
+    # @param s [String] The media type string.
+    # @return [MediaType] The media type.
     def self.parse(s)
       tree = Parsers::MediaType.new.parse(s)
       Parsers::MediaTypeTransform.new.apply(tree)
     rescue Parslet::ParseFailed
-      raise Xenon::ParseError.new("Invalid media type (#{s})")
+      raise Xenon::ParseError.new("Invalid media type (#{s}).")
     end
 
     %w(application audio image message multipart text video).each do |type|
@@ -43,10 +56,18 @@ module Xenon
       end
     end
 
+    # Creates a {MediaRange} using this media type with a quality factor.
+    #
+    # @param q [Numeric] A value between 1.0 (most desirable) and 0.0 (not acceptable).
+    # @return [MediaRange] The media range.
     def with_q(q)
       MediaRange.new(self, q)
     end
 
+    # Creates a {ContentType} using this media type with a charset.
+    #
+    # @param charset [String] The desired charset, e.g. 'utf-8'.
+    # @return [ContentType] The content type.
     def with_charset(charset)
       ContentType.new(self, charset)
     end
@@ -59,6 +80,7 @@ module Xenon
     XML = MediaType.new('application', 'xml')
   end
 
+  # A content type.
   class ContentType
     attr_reader :media_type, :charset
 
@@ -109,7 +131,7 @@ module Xenon
       dp = params.size <=> other.params.size
       return dp if dp != 0
       @q <=> other.q
-    end 
+    end
 
     def =~(media_type)
       (type == '*' || type == media_type.type) &&

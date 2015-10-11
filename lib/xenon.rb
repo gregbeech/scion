@@ -92,8 +92,8 @@ module Xenon
     end
 
     def self.error(status, developer_message = nil)
-      body = { 
-        status: status, 
+      body = {
+        status: status,
         developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]
       }
       Response.new.copy(complete: true, status: status, body: body)
@@ -156,7 +156,7 @@ module Xenon
     end
   end
 
-  class Api
+  class API
     include Xenon::Routing::Directives
 
     DEFAULT_MARSHALLERS = [JsonMarshaller.new]
@@ -178,8 +178,18 @@ module Xenon
 
     attr_reader :context
 
-    def route
-      raise NotImplementedError.new
+    class << self
+      def routes
+        @routes ||= []
+      end
+
+      def method_missing(name, *args, &block)
+        if instance_methods.include?(name)
+          routes << [name, args, block]
+        else
+          super
+        end
+      end
     end
 
     def call(env)
@@ -195,7 +205,13 @@ module Xenon
         if marshaller.nil?
           @context.rejections << Rejection.new(Rejection::ACCEPT, { supported: self.class.marshallers.map(&:media_type) })
         else
-          catch (:complete) { route }
+          catch (:complete) do
+            self.class.routes.each do |route|
+              name, args, block = route
+              route_block = proc { instance_eval(&block) }
+              send(name, *args, &route_block)
+            end
+          end
         end
         @context.response = handle_rejections(@context.rejections) unless @context.response.complete?
       rescue => e
@@ -211,7 +227,7 @@ module Xenon
     end
 
     def handle_error(e)
-      puts "handle_error: #{e}"
+      puts "handle_error: #{e}\n  #{e.backtrace.join("\n  ")}"
       @context.response = Response.error(500)
     end
 
@@ -229,7 +245,7 @@ module Xenon
         when Rejection::METHOD
           supported = rejections.take_while { |r| r.reason == Rejection::METHOD }.map { |r| r[:supported].upcase }
           Response.error(405, "Supported methods: #{supported.join(", ")}")
-        else 
+        else
           Response.error(500)
         end
       end

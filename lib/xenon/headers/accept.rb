@@ -1,4 +1,5 @@
 require 'xenon/headers'
+require 'xenon/parsers/header_rules'
 require 'xenon/parsers/media_type'
 
 module Xenon
