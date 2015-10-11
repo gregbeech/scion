@@ -51,5 +51,10 @@ module Xenon
       rule(comment: simple(:c)) { c.uncomment }
     end
 
+    class ETagHeaderTransform < HeaderTransform
+      rule(etag: { opaque_tag: simple(:t), weak: simple(:w) }) { Xenon::ETag.new(t, weak: true) }
+      rule(etag: { opaque_tag: simple(:t) }) { Xenon::ETag.new(t) }
+    end
+
   end
 end

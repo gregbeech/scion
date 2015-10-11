@@ -10,7 +10,7 @@ module Xenon
       def initialize(*etags)
         super(etags)
       end
-      
+
       alias_method :etags, :values
 
       def self.wildcard
@@ -44,9 +44,7 @@ module Xenon
       root(:if_match)
     end
 
-    class IfMatchHeaderTransform < HeaderTransform
-      rule(etag: { opaque_tag: simple(:t), weak: simple(:w) }) { ETag.new(t, weak: true) }
-      rule(etag: { opaque_tag: simple(:t) }) { ETag.new(t) }
+    class IfMatchHeaderTransform < ETagHeaderTransform
       rule(if_match: { wildcard: simple(:w) }) { Headers::IfMatch.new }
       rule(if_match: sequence(:et)) { Headers::IfMatch.new(*et) }
       rule(if_match: simple(:et)) { Headers::IfMatch.new(et) }

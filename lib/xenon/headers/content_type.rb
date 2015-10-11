@@ -12,7 +12,7 @@ module Xenon
       end
 
       def self.parse(s)
-        ContentType.new(Xenon::ContentType.parse(s))
+        new(Xenon::ContentType.parse(s))
       end
 
       def to_s

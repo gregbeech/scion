@@ -1,3 +1,5 @@
+require 'xenon/parsers/header_rules'
+
 module Xenon
   class ETag
     attr_reader :opaque_tag
@@ -8,9 +10,8 @@ module Xenon
   	end
 
     def self.parse(s)
-      weak = s.start_with?('W/')
-      opaque_tag = weak ? etag[3..-2] : etag[1..-2]
-      ETag.new(opaque_tag, weak: weak)
+      tree = Parsers::ETag.new.etag.parse(s)
+      Parsers::ETagHeaderTransform.new.apply(tree)
     end
 
   	def weak?
@@ -36,6 +37,12 @@ module Xenon
     def to_s
       s = weak? ? "W/" : ""
       s << '"' << @opaque_tag << '"'
+    end
+  end
+
+  module Parsers
+    class ETag < Parslet::Parser
+      include ETagHeaderRules
     end
   end
 end

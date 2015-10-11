@@ -48,6 +48,28 @@ module Xenon
       rule(:tchar) { alpha | digit | match(/[!#\$%&'\*\+\-\.\^_`\|~]/) }
       rule(:token) { tchar.repeat(1) }
 
+      # http://tools.ietf.org/html/rfc7231#section-7.1.1.1
+      rule(:day_name) { str('Mon') | str('Tue') | str('Wed') | str('Thu') | str('Fri') | str('Sat') | str('Sun') }
+      rule(:day) { digit.repeat(2) }
+      rule(:month) { (str('Jan') | str('Feb') | str('Mar') | str('Apr') | str('May') | str('Jun') | str('Jul') | str('Aug') | str('Sep') | str('Oct') | str('Nov') | str('Dec')) }
+      rule(:year) { digit.repeat(4) }
+      rule(:date1) { day >> sp >> month >> sp >> year }
+      rule(:gmt) { str('GMT') }
+      rule(:hour) { digit.repeat(2) }
+      rule(:minute) { digit.repeat(2) }
+      rule(:second) { digit.repeat(2) }
+      rule(:time_of_day) { hour >> str(':') >> minute >> str(':') >> second }
+      rule(:imf_fixdate) { day_name >> str(',') >> sp >> date1 >> sp >> time_of_day >> sp >> gmt }
+      rule(:day_name_l) { str('Monday') | str('Tuesday') | str('Wednesday') | str('Thursday') | str('Friday') | str('Saturday') | str('Sunday') }
+      rule(:year2) { digit.repeat(2) }
+      rule(:date2) { day >> str('-') >> month >> str('-') >> year2 }
+      rule(:rfc850_date) { day_name_l >> str(',') >> sp >> date2 >> sp >> time_of_day >> sp >> gmt }
+      rule(:day1) { sp >> digit }
+      rule(:date3) { month >> sp >> (day | day1) }
+      rule(:asctime_date) { day_name >> sp >> date3 >> sp >> time_of_day >> sp >> year }
+      rule(:obs_date) { rfc850_date | asctime_date }
+      rule(:http_date) { (imf_fixdate | obs_date).as(:http_date) }
+
       # extras -- TODO: move these into header rules?
       rule(:comma) { str(',') >> sp? }
       rule(:semicolon) { str(';') >> sp? }
@@ -57,6 +79,7 @@ module Xenon
       rule(simple(:v)) { v.respond_to?(:str) ? v.str : v }
 
       rule(quoted_string: simple(:qs)) { qs[1..-2].gsub(/\\(.)/, '\1') }
+      rule(http_date: simple(:str)) { Time.httpdate(str) }
     end
 
   end
