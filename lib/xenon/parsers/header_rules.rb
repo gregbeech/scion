@@ -16,10 +16,21 @@ module Xenon
       rule(:quoted_string) { (dquote >> (qdtext | quoted_pair).repeat >> dquote).as(:quoted_string) }
       rule(:ctext) { htab | sp | match(/[\u0021-\u0027\u002a-\u005b\u005d-\u007e]/) | obs_text }
       rule(:comment) { (str('(') >> (ctext | quoted_pair | comment).repeat >> str(')')).as(:comment) }
-    
+
       # http://tools.ietf.org/html/rfc7231#section-5.3.1
       rule(:weight_value) { (digit >> (str('.') >> digit.repeat(0, 3)).maybe).as(:q) }
       rule(:weight) { param_sep >> str('q') >> sp? >> str('=') >> sp? >> weight_value >> sp? }
+    end
+
+    module AuthHeaderRules
+      include Parslet, HeaderRules
+
+      rule(:token68) { ((alpha | digit | match(/[\-\._~\+\/]/)) >> str('=').repeat).repeat(1).as(:token) }
+      rule(:auth_scheme) { token.as(:auth_scheme) }
+      rule(:name) { token.as(:name) }
+      rule(:value) { token.as(:value) }
+      rule(:auth_param) { (name >> bws >> str('=') >> bws >> (token | quoted_string).as(:value)).as(:auth_param) }
+      rule(:auth_params) { (auth_param.maybe >> (ows >> comma >> ows >> auth_param).repeat).as(:auth_params) }
     end
 
     module ETagHeaderRules

@@ -3,8 +3,8 @@ source 'https://rubygems.org'
 gemspec
 
 group :development, :test do
-  gem 'guard', '~> 2', require: false
-  gem 'guard-rspec', '~> 4', require: false
+  gem 'guard', require: false
+  gem 'guard-rspec', require: false
 end
 
 group :test do

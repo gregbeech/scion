@@ -3,6 +3,19 @@ require 'parslet'
 module Xenon
   module Parsers
 
+    # Parslet doesn't match sequence of sequences (i.e. [['foo', 'bar']]) as a sequence(:v) in transform
+    # rules so this is a little wrapper class that allows smuggling an array through the matcher rules,
+    # for example above would be [Tuple.new('foo', 'bar')], when no 'proper' class is required.
+    class Tuple
+      def initialize(*values)
+        @values = values
+      end
+
+      def to_a
+        @values
+      end
+    end
+
     module BasicRules
       include Parslet
 
@@ -34,13 +47,17 @@ module Xenon
       # http://tools.ietf.org/html/rfc7230#section-3.2.6
       rule(:tchar) { alpha | digit | match(/[!#\$%&'\*\+\-\.\^_`\|~]/) }
       rule(:token) { tchar.repeat(1) }
+
+      # extras -- TODO: move these into header rules?
+      rule(:comma) { str(',') >> sp? }
+      rule(:semicolon) { str(';') >> sp? }
     end
 
     class BasicTransform < Parslet::Transform
       rule(simple(:v)) { v.respond_to?(:str) ? v.str : v }
-      
+
       rule(quoted_string: simple(:qs)) { qs[1..-2].gsub(/\\(.)/, '\1') }
     end
-    
+
   end
 end
