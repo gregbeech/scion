@@ -2,16 +2,12 @@ require 'json'
 require 'rack'
 require 'active_support/core_ext/string'
 require 'xenon/headers'
-require 'xenon/routing'
+require 'xenon/routing/directives'
 require 'xenon/version'
 
 module Xenon
 
   class Rejection
-    ACCEPT = 'ACCEPT'
-    HEADER = 'HEADER'
-    METHOD = 'METHOD'
-
     attr_reader :reason, :info
 
     def initialize(reason, info = {})
@@ -203,7 +199,7 @@ module Xenon
       marshaller = accept ? self.class.select_marshaller(accept.media_ranges) : self.class.marshallers.first
       begin
         if marshaller.nil?
-          @context.rejections << Rejection.new(Rejection::ACCEPT, { supported: self.class.marshallers.map(&:media_type) })
+          @context.rejections << Rejection.new(:accept, { supported: self.class.marshallers.map(&:media_type) })
         else
           catch (:complete) do
             self.class.routes.each do |route|
@@ -238,12 +234,12 @@ module Xenon
       else
         rejection = rejections.first
         case rejection.reason
-        when Rejection::ACCEPT
+        when :accept
           Response.error(406, "Supported media types: #{rejection[:supported].join(", ")}")
-        when Rejection::HEADER
+        when :header
           Response.error(400, "Missing required header: #{rejection[:required]}")
-        when Rejection::METHOD
-          supported = rejections.take_while { |r| r.reason == Rejection::METHOD }.map { |r| r[:supported].upcase }
+        when :method
+          supported = rejections.take_while { |r| r.reason == :method }.map { |r| r[:supported].upcase }
           Response.error(405, "Supported methods: #{supported.join(", ")}")
         else
           Response.error(500)
