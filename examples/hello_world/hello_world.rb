@@ -1,16 +1,26 @@
 require 'xenon'
+require 'ostruct'
 
 class HelloWorld < Xenon::API
-  authenticator = Xenon::BasicAuth.new realm: 'hello world' do |credentials|
-    credentials.username # should actually auth here!
-  end
-
   path '/' do
     get do
-      authenticate(authenticator) do |user|
+      hello_auth do |user|
         params :greeting do |greeting|
-          complete :ok, { greeting => user }
+          complete :ok, { greeting => user.username }
         end
+      end
+    end
+  end
+
+  private
+
+  def hello_auth
+    @authenticator ||= Xenon::BasicAuth.new realm: 'hello world' do |credentials|
+      OpenStruct.new(username: credentials.username) # should actually auth here!
+    end
+    authenticate @authenticator do |user|
+      authorize user.username == 'greg' do
+        yield user
       end
     end
   end

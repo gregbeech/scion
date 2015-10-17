@@ -15,6 +15,15 @@ module Xenon
         end
       end
 
+      def authorize(check)
+        check = check.call if check.respond_to?(:call)
+        if check
+          yield
+        else
+          reject :forbidden
+        end
+      end
+
     end
   end
 end

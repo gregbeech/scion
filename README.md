@@ -2,9 +2,7 @@
 
 [![Gem Version][fury-badge]][fury] [![Build Status][travis-badge]][travis] [![Code Climate][cc-badge]][cc] [![Test Coverage][ccc-badge]][ccc] [![YARD Docs][docs-badge]][docs]
 
-An HTTP framework for building RESTful APIs, inspired by [Spray][spray].
-
-At the moment I probably wouldn't use this gem for anything you actually depend on because it's _very_ early in its lifecycle. However, this is a flavour of what's in here.
+An HTTP framework for building RESTful APIs. As you can probably tell from the very low version number, this is in very early stages of development so I wouldn't use it anywhere close to production yet. But have a play around and let me know what you think, I'm very open to feedback.
 
 ## HTTP Model
 
@@ -19,36 +17,66 @@ accept.media_ranges.last.q #=> 0.5
 # etc.
 ```
 
+Yeah, it's not exciting and it's not glamorous, but if you need to parse parts of the HTTP protocol that other frameworks just don't reach, Xenon is here for you.
+
 ## Routing
 
-A tree-based routing approach based on Spray, giving you great flexibility in building APIs and without the need to write extensions, helpers, etc. because everything is a directive and you extend it by simply writing directives! This is highly unstable and in flux at the moment.
+A tree-based routing approach using "directives" which gives you great flexibility in building APIs and without the need to write extensions, helpers, etc. because everything is a directive and you extend it by simply writing more directives!
 
-This is the kind of syntax I'm aiming for which _sort of_ works, but needs a load of changes to allow composition so what's there now is really just a proof of concept of the basic syntax rather than anything close to useful.
+A really simple example with a custom authentication directive is shown below. You can run this from the [examples](examples/hello_world) directory!
 
-```ruby
-path_prefix 'users' do
-  path_end do
+~~~ruby
+class HelloWorld < Xenon::API
+  path '/' do
     get do
-      complete 200, User.all
-    end
-    post do
-      body as: User do |user|
-        user.save!
-        respond_with_header 'Location' => "/users/#{user.id}" do
-          complete 201, user
+      hello_auth do |user|
+        params :greeting do |greeting|
+          complete :ok, { greeting => user.username }
         end
       end
     end
   end
-  path /[0-9]+/ do |user_id|
-    get do
-      complete 200, User.get_by_id(user_id)
+
+  private
+
+  def hello_auth
+    @authenticator ||= Xenon::BasicAuth.new realm: 'hello world' do |credentials|
+      OpenStruct.new(username: credentials.username) # should actually auth here!
+    end
+    authenticate @authenticator do |user|
+      authorize user.username == 'greg' do
+        yield user
+      end
     end
   end
 end
-```
+~~~
 
-Of course, it'll do all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found.
+Of course, it does all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found. For example, if you try to `POST` to the above code you'll see the error:
+
+~~~json
+{
+  "status": 405,
+  "developer_message": "Supported methods: GET"
+}
+~~~
+
+Or if you send it an `Accept` header that doesn't allow JSON (the only supported format by default) you'll see:
+
+~~~ruby
+{
+  "status": 406,
+  "developer_message": "Supported media types: application/json"
+}
+~~~
+
+## Spray
+
+Xenon is inspired by [Spray][spray], an awesome Scala framework for building RESTful APIs, and which I sorely miss while working in Ruby. However although it's inspired by it, there are some key differences.
+
+Firsly Xenon is synchronous rather than asynchronous, as that is a much more common approach to writing code in Ruby, and fits better with commonly used frameworks such as Rack and ActiveRecord. It's also much easier to write and reason about synchronous code, and you can still scale it pretty well using the process model.
+
+Secondly the directives are just methods which are composed using Ruby's usual `yield` mechanism rather than being monads composed with flat map as in Spray. This is primarily to make the framework feel natural for Ruby users where the general desire is for simplicity and "it just works". This does limit composability of directives, but for most real-world situations this doesn't seem to be a problem so I think it's the right trade-off.
 
 ## Installation
 

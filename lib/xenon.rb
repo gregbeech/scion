@@ -121,6 +121,14 @@ module Xenon
   end
 
   class XmlMarshaller
+    def initialize
+      gem 'builder'
+      require 'active_support/core_ext/array/conversions'
+      require 'active_support/core_ext/hash/conversions'
+    rescue Gem::LoadError
+      raise 'Install the "builder" gem to enable XML.'
+    end
+
     def media_type
       MediaType::XML
     end
@@ -151,11 +159,11 @@ module Xenon
       end
 
       def select_marshaller(media_ranges)
-        weighted = marshallers.sort_by do |m|
-          media_range = media_ranges.find { |mr| m.marshal_to?(mr) }
-          media_range ? media_range.q : 0.0
+        weighted = marshallers.map do |marshaller|
+          media_range = media_ranges.find { |media_range| marshaller.marshal_to?(media_range) }
+          [marshaller, media_range ? media_range.q : 0]
         end
-        weighted.last
+        weighted.select { |_, q| q > 0 }.sort_by { |_, q| q }.map { |m, _| m }.last
       end
     end
 
@@ -187,14 +195,14 @@ module Xenon
 
       catch (:complete) do
         begin
-          if marshaller.nil?
-            @context.rejections << Rejection.new(:accept, { supported: self.class.marshallers.map(&:media_type) })
-          else
+          if marshaller
             self.class.routes.each do |route|
               name, args, block = route
               route_block = proc { instance_eval(&block) }
               send(name, *args, &route_block)
             end
+          else
+            reject :accept, supported: self.class.marshallers.map(&:media_type)
           end
           handle_rejections(@context.rejections)
         rescue => e
@@ -228,6 +236,8 @@ module Xenon
         case rejection.reason
         when :accept
           fail 406, "Supported media types: #{rejection[:supported].join(", ")}"
+        when :forbidden
+          fail 403
         when :header
           fail 400, "Missing required header: #{rejection[:required]}"
         when :method
