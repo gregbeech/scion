@@ -33,8 +33,9 @@ task :build do
 end
 
 desc 'Tags version, pushes to remote, and pushes gems'
-task :release => :build do
-  sh 'git', 'tag', '-m', changelog, "v#{Xenon::VERSION}"
+task :release => [:spec, :build] do
+  sh "git tag v#{File.read(File.join(__dir__, 'VERSION'))}"
+  sh "git push origin v#{File.read(File.join(__dir__, 'VERSION'))}"
   sh "git push origin master"
   sh "ls pkg/*.gem | xargs -n 1 gem push"
 end

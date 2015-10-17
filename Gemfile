@@ -4,7 +4,7 @@ gemspec
 
 Dir[File.join('*', '*.gemspec')].each do |gemspec|
   lib = gemspec.scan(/xenon-(.*)\.gemspec/).flatten.first
-  gemspec(:name => "xenon-#{lib}", development_group: lib)
+  gemspec(name: "xenon-#{lib}", development_group: lib)
 end
 
 group :development, :test do

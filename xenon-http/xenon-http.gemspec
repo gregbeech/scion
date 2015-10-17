@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Xenon::HTTP_VERSION
   spec.authors       = ['Greg Beech']
   spec.email         = ['greg@gregbeech.com']
-  spec.summary       = %q{An HTTP framework for building RESTful APIs.}
-  spec.description   = %q{Provides a model for the HTTP protocol and a tree-based routing syntax.}
+  spec.summary       = %q{A model and parsers for the HTTP protocol.}
+  spec.description   = %q{Provides a model for the HTTP protocol with high quality parsers.}
   spec.homepage      = 'https://github.com/gregbeech/xenon'
   spec.license       = 'MIT'
 
