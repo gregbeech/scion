@@ -33,7 +33,7 @@ module Xenon
     end
 
     # https://tools.ietf.org/html/rfc7235#section-4.1
-    class WwwAuthenticate < ListHeader 'WWW-Authenticate'
+    class WWWAuthenticate < ListHeader 'WWW-Authenticate'
       def initialize(*challenges)
         super(challenges)
       end
@@ -41,8 +41,8 @@ module Xenon
       alias_method :challenges, :values
 
       def self.parse(s)
-        tree = Parsers::WwwAuthenticateHeader.new.parse(s)
-        Parsers::WwwAuthenticateHeaderTransform.new.apply(tree)
+        tree = Parsers::WWWAuthenticateHeader.new.parse(s)
+        Parsers::WWWAuthenticateHeaderTransform.new.apply(tree)
       end
 
       def to_s
@@ -52,19 +52,19 @@ module Xenon
   end
 
   module Parsers
-    class WwwAuthenticateHeader < Parslet::Parser
+    class WWWAuthenticateHeader < Parslet::Parser
       include AuthHeaderRules
       rule(:challenge) { (auth_scheme >> sp >> (auth_params | token68)).as(:challenge) }
       rule(:www_authenticate) { (challenge >> (comma >> challenge).repeat).as(:www_authenticate) }
       root(:www_authenticate)
     end
 
-    class WwwAuthenticateHeaderTransform < HeaderTransform
+    class WWWAuthenticateHeaderTransform < HeaderTransform
       rule(auth_param: { name: simple(:n), value: simple(:v) }) { Tuple.new(n, v) }
       rule(challenge: { auth_scheme: simple(:s), auth_params: simple(:p) }) { Headers::Challenge.new(s, Hash[*p.to_a]) }
       rule(challenge: { auth_scheme: simple(:s), auth_params: sequence(:p) }) { Headers::Challenge.new(s, Hash[p.map(&:to_a)]) }
-      rule(www_authenticate: simple(:c)) { Headers::WwwAuthenticate.new(c) }
-      rule(www_authenticate: sequence(:c)) { Headers::WwwAuthenticate.new(*c) }
+      rule(www_authenticate: simple(:c)) { Headers::WWWAuthenticate.new(c) }
+      rule(www_authenticate: sequence(:c)) { Headers::WWWAuthenticate.new(*c) }
     end
   end
 end

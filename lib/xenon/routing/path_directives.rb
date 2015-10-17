@@ -18,14 +18,16 @@ module Xenon
         end
       end
 
-      def path_end(&inner)
-        path_prefix(/\Z/, &inner)
+      def path_end
+        path_prefix(/\Z/) do
+          yield
+        end
       end
 
-      def path(pattern, &inner)
+      def path(pattern)
         path_prefix(pattern) do |*captures|
           path_end do
-            inner.call(*captures)
+            yield *captures
           end
         end
       end

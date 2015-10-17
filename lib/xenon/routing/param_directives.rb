@@ -5,15 +5,15 @@ module Xenon
     module ParamDirectives
       include RouteDirectives
 
-      def form_hash
+      def param_hash
         extract_request do |request|
-          yield request.form_hash
+          yield request.param_hash
         end
       end
 
-      def query_hash
-        extract_request do |request|
-          yield request.query_hash
+      def params(*names)
+        param_hash do |hash|
+          yield *hash.slice(*names).values
         end
       end
 

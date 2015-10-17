@@ -8,6 +8,7 @@ module Xenon
       include MethodDirectives
       include ParamDirectives
       include PathDirectives
+      include SecurityDirectives
     end
   end
 end

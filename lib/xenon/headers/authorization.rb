@@ -1,51 +1,9 @@
 require 'base64'
+require 'xenon/auth'
 require 'xenon/headers'
 require 'xenon/parsers/header_rules'
-require 'xenon/quoted_string'
 
 module Xenon
-  class BasicCredentials
-    attr_reader :username, :password
-
-    def initialize(username, password)
-      @username = username
-      @password = password
-    end
-
-    def token
-      Base64.strict_encode64("#{@username}:#{@password}")
-    end
-
-    def self.decode(s)
-      str = Base64.strict_decode64(s)
-      username, password = str.split(':', 2)
-      BasicCredentials.new(username, password)
-    end
-
-    def to_s
-      "Basic #{token}"
-    end
-  end
-
-  class GenericCredentials
-    using QuotedString
-
-    attr_reader :scheme, :token, :params
-
-    def initialize(scheme, token: nil, params: {})
-      @scheme = scheme
-      @token = token
-      @params = params
-    end
-
-    def to_s
-      s = @scheme.dup
-      s << ' ' << @token if @token
-      s << ' ' << @params.map { |n, v| "#{n}=#{v.quote}" }.join(', ')
-      s
-    end
-  end
-
   class Headers
     # http://tools.ietf.org/html/rfc7235#section-4.2
     class Authorization < Header 'Authorization'
@@ -58,6 +16,8 @@ module Xenon
       def self.parse(s)
         tree = Parsers::AuthorizationHeader.new.parse(s)
         Parsers::AuthorizationHeaderTransform.new.apply(tree)
+      rescue Parslet::ParseFailed
+        raise Xenon::ParseError.new("Invalid Authorization header (#{s}).")
       end
 
       def to_s

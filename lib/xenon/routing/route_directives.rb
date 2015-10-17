@@ -24,8 +24,18 @@ module Xenon
         end
       end
 
-      def reject(rejection)
-        context.rejections << rejection unless rejection.nil?
+      def reject(rejection, info = {})
+        return if rejection.nil?
+        rejection = Rejection.new(rejection, info) unless rejection.is_a?(Rejection)
+        context.rejections << rejection
+      end
+
+      def fail(status, developer_message = nil)
+        body = {
+          status: status,
+          developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]
+        }
+        complete status, body
       end
 
       def extract(lambda)
