@@ -4,7 +4,9 @@
 
 An HTTP framework for building RESTful APIs. As you can probably tell from the very low version number, this is in very early stages of development so I wouldn't use it anywhere close to production yet. But have a play around and let me know what you think, I'm very open to feedback.
 
-## HTTP Model
+The **xenon** gem is a top-level gem that simply pulls in the other gems for convenience.
+
+## xenon-http
 
 A set of model objects for the HTTP protocol which can parse and format the strings you typically get into proper objects you can work with. At the moment this covers key things like media types and the most common headers, but it will expand to cover the whole protocol. You can use the model by itself without any other parts of the library.
 
@@ -19,7 +21,7 @@ accept.media_ranges.last.q #=> 0.5
 
 Yeah, it's not exciting and it's not glamorous, but if you need to parse parts of the HTTP protocol that other frameworks just don't reach, Xenon is here for you.
 
-## Routing
+## xenon-routing
 
 A tree-based routing approach using "directives" which gives you great flexibility in building APIs and without the need to write extensions, helpers, etc. because everything is a directive and you extend it by simply writing more directives!
 

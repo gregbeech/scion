@@ -1,4 +1,4 @@
-require 'xenon'
+require 'xenon/api'
 require 'ostruct'
 
 class HelloWorld < Xenon::API

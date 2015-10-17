@@ -16,8 +16,13 @@ module Xenon
       end
 
       def authorize(check)
-        check = check.call if check.respond_to?(:call)
-        if check
+        if check.respond_to?(:call)
+          extract_request(check) do |authorized|
+            authorize(authorized) do
+              yield
+            end
+          end
+        elsif check
           yield
         else
           reject :forbidden

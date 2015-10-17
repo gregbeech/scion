@@ -1,0 +1,6 @@
+require 'xenon/routing_version'
+require 'xenon/marshallers'
+require 'xenon/request'
+require 'xenon/response'
+require 'xenon/routing/context'
+require 'xenon/routing/directives'
