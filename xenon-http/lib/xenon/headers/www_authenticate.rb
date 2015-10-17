@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/indifferent_access'
+require 'forwardable'
 require 'xenon/headers'
 require 'xenon/parsers/header_rules'
 require 'xenon/quoted_string'

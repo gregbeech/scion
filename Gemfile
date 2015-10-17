@@ -8,6 +8,8 @@ Dir[File.join('*', '*.gemspec')].each do |gemspec|
 end
 
 group :development, :test do
+  gem 'rake', require: false
+  gem 'rspec', require: false
   gem 'guard', require: false
   gem 'guard-rspec', require: false
   gem 'yard', require: false
