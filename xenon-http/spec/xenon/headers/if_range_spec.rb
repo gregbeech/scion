@@ -21,7 +21,7 @@ describe Xenon::Headers::IfRange do
     it 'can parse a strong etag' do
       header = Xenon::Headers::IfRange.parse('"xyzzy"')
       expect(header.etag).to_not be_nil
-      expect(header.etag.opaque_tag).to eq 'xyzzy'
+      expect(header.etag.tag).to eq 'xyzzy'
       expect(header.etag).to be_strong
     end
 
