@@ -1,4 +1,4 @@
-require 'xenon/parsers/header_rules'
+require 'xenon/parsers/etag'
 
 module Xenon
   # An Etag, see {http://tools.ietf.org/html/rfc7232#section-2.3 RFC 7232 § 2.3}.
@@ -11,7 +11,15 @@ module Xenon
   	def initialize(tag, weak: false)
       @tag = tag
       @weak = weak
+      freeze
   	end
+
+    # Prevents further modifications to the ETag.
+    # @return [ETag] This method returns self.
+    def freeze
+      @tag.freeze
+      super
+    end
 
     # Parses an ETag string.
     # @param s [String] The ETag string.
@@ -47,16 +55,31 @@ module Xenon
       @tag == other.tag
     end
 
+    # An equality function that checks the ETags have the same strength and tag.
+    # @return [true, false] `true` if the ETags have the same strength and tag; otherwise `false`.
+    def ==(other)
+      strong? == other.strong? && @tag == other.tag
+    end
+    alias_method :eql?, :==
+
+    # A case equality function that uses {strong_eq?} or {weak_eq?} depending on whether the receiving
+    # tag is strong or weak, respectively.
+    # @return [true, false] `true` if the other ETag matches; otherwise `false`.
+    def ===(other)
+      strong? ? strong_eq?(other) : weak_eq?(other)
+    end
+    alias_method :=~, :===
+
+    # Returns a hash code based on the ETag state.
+    # @return [Fixnum] The ETag hash.
+    def hash
+      to_s.hash
+    end
+
     # Returns a string representation of the ETag.
     # @return [String] The ETag string.
     def to_s
       strong? ? %("#{@tag}") : %(W/"#{@tag}")
-    end
-  end
-
-  module Parsers
-    class ETag < Parslet::Parser
-      include ETagHeaderRules
     end
   end
 end
