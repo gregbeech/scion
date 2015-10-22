@@ -1,25 +1,39 @@
 require 'xenon/media_type'
 
 module Xenon
-  class JsonMarshaller
-    def media_type
-      MediaType::JSON
-    end
-
+  module Marshaller
     def content_type
       media_type.with_charset(Encoding::UTF_8)
     end
 
-    def marshal_to?(media_range)
+    def unmarshal?(media_type)
+      media_type == self.media_type
+    end
+
+    def marshal?(media_range)
       media_range =~ media_type
+    end
+  end
+
+  class JsonMarshaller
+    include Marshaller
+
+    def media_type
+      MediaType::JSON
     end
 
     def marshal(obj)
       [obj.to_json]
     end
+
+    def unmarshal(body, as:)
+      as ? as.new.from_json(body.read) : JSON.load(body)
+    end
   end
 
   class XmlMarshaller
+    include Marshaller
+
     def initialize
       gem 'builder'
       require 'active_support/core_ext/array/conversions'
@@ -32,17 +46,13 @@ module Xenon
       MediaType::XML
     end
 
-    def content_type
-      media_type.with_charset(Encoding::UTF_8)
-    end
-
-    def marshal_to?(media_range)
-      media_range =~ media_type
-    end
-
     def marshal(obj)
       raise "#{obj.class} does not support #to_xml" unless obj.respond_to?(:to_xml)
       [obj.to_xml]
+    end
+
+    def unmarshal(body, as:)
+      as.new.from_xml(body.read)
     end
   end
 end

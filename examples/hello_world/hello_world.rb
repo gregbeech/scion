@@ -3,10 +3,15 @@ require 'ostruct'
 
 class HelloWorld < Xenon::API
   path '/' do
-    get do
-      hello_auth do |user|
+    hello_auth do |user|
+      get do
         params :greeting do |greeting|
           complete :ok, { greeting => user.username }
+        end
+      end
+      post do
+        body do |body|
+          complete :ok, { body['greeting'] => user.username }
         end
       end
     end

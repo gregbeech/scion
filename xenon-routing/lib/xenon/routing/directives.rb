@@ -5,6 +5,7 @@ module Xenon
     module Directives
       include RouteDirectives
       include HeaderDirectives
+      include MarshallingDirectives
       include MethodDirectives
       include ParamDirectives
       include PathDirectives

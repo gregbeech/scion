@@ -30,10 +30,15 @@ A really simple example with a custom authentication directive is shown below. Y
 ~~~ruby
 class HelloWorld < Xenon::API
   path '/' do
-    get do
-      hello_auth do |user|
+    hello_auth do |user|
+      get do
         params :greeting do |greeting|
           complete :ok, { greeting => user.username }
+        end
+      end
+      post do
+        body do |body|
+          complete :ok, { body['greeting'] => user.username }
         end
       end
     end
@@ -52,6 +57,7 @@ class HelloWorld < Xenon::API
     end
   end
 end
+
 ~~~
 
 Of course, it does all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found. For example, if you try to `POST` to the above code you'll see the error:

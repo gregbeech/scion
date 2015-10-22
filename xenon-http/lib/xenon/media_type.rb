@@ -56,6 +56,10 @@ module Xenon
       end
     end
 
+    def ==(other)
+      @type == other.type && @subtype == other.subtype && @params == other.params
+    end
+
     # Creates a {MediaRange} using this media type with a quality factor.
     #
     # @param q [Numeric] A value between 1.0 (most desirable) and 0.0 (not acceptable).

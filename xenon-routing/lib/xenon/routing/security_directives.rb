@@ -15,6 +15,12 @@ module Xenon
         end
       end
 
+      def optional_authenticate(authenticator)
+        extract_request(authenticator) do |user|
+          yield user
+        end
+      end
+
       def authorize(check)
         if check.respond_to?(:call)
           extract_request(check) do |authorized|

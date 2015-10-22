@@ -14,9 +14,13 @@ module Xenon
         (@marshallers.nil? || @marshallers.empty?) ? DEFAULT_MARSHALLERS : @marshallers
       end
 
-      def select_marshaller(media_ranges)
+      def request_marshaller(content_type)
+        marshallers.find { |m| m.unmarshal?(content_type.media_type) }
+      end
+
+      def response_marshaller(media_ranges)
         weighted = marshallers.map do |marshaller|
-          media_range = media_ranges.find { |media_range| marshaller.marshal_to?(media_range) }
+          media_range = media_ranges.find { |media_range| marshaller.marshal?(media_range) }
           [marshaller, media_range ? media_range.q : 0]
         end
         weighted.select { |_, q| q > 0 }.sort_by { |_, q| q }.map { |m, _| m }.last
@@ -47,11 +51,11 @@ module Xenon
       @context = Routing::Context.new(Request.new(Rack::Request.new(env)), Response.new)
 
       accept = @context.request.header('Accept')
-      marshaller = accept ? self.class.select_marshaller(accept.media_ranges) : self.class.marshallers.first
+      response_marshaller = accept ? self.class.response_marshaller(accept.media_ranges) : self.class.marshallers.first
 
       catch (:complete) do
         begin
-          if marshaller
+          if response_marshaller
             self.class.routes.each do |route|
               name, args, block = route
               route_block = proc { instance_eval(&block) }
@@ -66,10 +70,10 @@ module Xenon
         end
       end
 
-      marshaller ||= self.class.marshallers.first
+      response_marshaller ||= self.class.marshallers.first
       resp = @context.response.copy(
-        headers: @context.response.headers.set(Headers::ContentType.new(marshaller.content_type)),
-        body: marshaller.marshal(@context.response.body))
+        headers: @context.response.headers.set(Headers::ContentType.new(response_marshaller.content_type)),
+        body: response_marshaller.marshal(@context.response.body))
       [resp.status, resp.headers.map { |h| [h.name, h.to_s] }.to_h, resp.body]
     end
 

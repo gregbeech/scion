@@ -23,12 +23,16 @@ module Xenon
     end
 
     def header(name)
-      snake_name = name.to_s.tr('-', '_')
-      value = @rack_req.env['HTTP_' + snake_name.upcase]
+      snake_name = name.to_s.tr('-', '_').upcase
+      value = @rack_req.env['HTTP_' + snake_name] || @rack_req.env[snake_name]
       return nil if value.nil?
 
       klass = Xenon::Headers.header_class(name)
       klass ? klass.parse(value) : Xenon::Headers::Raw.new(name, value)
+    end
+
+    def body
+      @rack_req.body
     end
 
     def copy(changes = {})
