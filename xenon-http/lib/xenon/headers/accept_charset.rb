@@ -27,7 +27,7 @@ module Xenon
     # http://tools.ietf.org/html/rfc7231#section-5.3.3
     class AcceptCharset < ListHeader 'Accept-Charset'
       def initialize(*charset_ranges)
-        super(charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!)
+        super(charset_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse)
       end
 
       alias_method :charset_ranges, :values

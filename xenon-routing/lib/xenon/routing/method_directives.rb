@@ -10,7 +10,7 @@ module Xenon
           if methods.include?(request.request_method)
             yield
           else
-            reject Rejection.new(:method, { supported: method })
+            reject Rejection.new(:method, { supported: methods })
           end
         end
       end

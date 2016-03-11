@@ -27,7 +27,7 @@ module Xenon
     # http://tools.ietf.org/html/rfc7231#section-5.3.4
     class AcceptEncoding < ListHeader 'Accept-Encoding'
       def initialize(*coding_ranges)
-        super(coding_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!)
+        super(coding_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse)
       end
 
       alias_method :coding_ranges, :values

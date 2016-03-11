@@ -12,7 +12,12 @@ group :development, :test do
   gem 'rspec', require: false
   gem 'guard', require: false
   gem 'guard-rspec', require: false
+  gem 'thin', require: false
   gem 'yard', require: false
+end
+
+group :development do
+  gem 'shotgun', require: false
 end
 
 group :test do

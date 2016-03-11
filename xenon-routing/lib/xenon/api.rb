@@ -53,7 +53,7 @@ module Xenon
       accept = @context.request.header('Accept')
       response_marshaller = accept ? self.class.response_marshaller(accept.media_ranges) : self.class.marshallers.first
 
-      catch (:complete) do
+      catch :complete do
         begin
           if response_marshaller
             self.class.routes.each do |route|
@@ -106,8 +106,8 @@ module Xenon
         when :header
           fail 400, "Missing required header: #{rejection[:required]}"
         when :method
-          supported = rejections.take_while { |r| r.reason == :method }.map { |r| r[:supported].upcase }
-          fail 405, "Supported methods: #{supported.join(", ")}"
+          supported = rejections.take_while { |r| r.reason == :method }.flat_map { |r| r[:supported] }
+          fail 405, "Supported methods: #{supported.map(&:upcase).join(", ")}"
         when :unauthorized
           if rejection[:scheme]
             challenge = Headers::Challenge.new(rejection[:scheme], rejection.info.except(:scheme))

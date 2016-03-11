@@ -7,7 +7,7 @@ module Xenon
     # http://tools.ietf.org/html/rfc7231#section-5.3.2
     class Accept < ListHeader 'Accept'
       def initialize(*media_ranges)
-        super(media_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!)
+        super(media_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse)
       end
 
       alias_method :media_ranges, :values

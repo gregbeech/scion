@@ -27,7 +27,7 @@ module Xenon
     # http://tools.ietf.org/html/rfc7231#section-5.3.5
     class AcceptLanguage < ListHeader 'Accept-Language'
       def initialize(*language_ranges)
-        super(language_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse!)
+        super(language_ranges.sort_by.with_index { |mr, i| [mr, -i] }.reverse)
       end
 
       alias_method :language_ranges, :values

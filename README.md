@@ -25,7 +25,7 @@ Yeah, it's not exciting and it's not glamorous, but if you need to parse parts o
 
 A tree-based routing approach using "directives" which gives you great flexibility in building APIs and without the need to write extensions, helpers, etc. because everything is a directive and you extend it by simply writing more directives!
 
-A really simple example with a custom authentication directive is shown below. You can run this from the [examples](examples/hello_world) directory!
+A really simple example with a custom authentication directive is shown below, assuming an ActiveRecord-style `Salutation` model which supports `from_json` and `to_json`. You can run this from the [examples](examples/hello_world) directory!
 
 ~~~ruby
 class HelloWorld < Xenon::API
@@ -33,12 +33,13 @@ class HelloWorld < Xenon::API
     hello_auth do |user|
       get do
         params :greeting do |greeting|
-          complete :ok, { greeting => user.username }
+          complete :ok, Salutation.new(greeting: greeting, username: user.username)
         end
       end
       post do
-        body do |body|
-          complete :ok, { body['greeting'] => user.username }
+        body as: Salutation do |salutation|
+          salutation.username = user.username
+          complete :ok, salutation
         end
       end
     end
@@ -47,17 +48,19 @@ class HelloWorld < Xenon::API
   private
 
   def hello_auth
-    @authenticator ||= Xenon::BasicAuth.new realm: 'hello world' do |credentials|
-      OpenStruct.new(username: credentials.username) # should actually auth here!
-    end
-    authenticate @authenticator do |user|
+    authenticate authenticator do |user|
       authorize user.username == 'greg' do
         yield user
       end
     end
   end
-end
 
+  def authenticator
+    @authenticator ||= Xenon::BasicAuth.new realm: 'hello world' do |credentials|
+      OpenStruct.new(username: credentials.username) # should actually auth here!
+    end
+  end
+end
 ~~~
 
 Of course, it does all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found. For example, if you try to `PUT` to the above code you'll see the error:
@@ -65,7 +68,7 @@ Of course, it does all the things you'd expect like support content negotiation 
 ~~~json
 {
   "status": 405,
-  "developer_message": "Supported methods: GET, POST"
+  "developer_message": "Supported methods: GET, HEAD, POST"
 }
 ~~~
 
