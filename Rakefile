@@ -24,11 +24,16 @@ end
 desc 'Build gems into the pkg directory'
 task :build do
   FileUtils.rm_rf('pkg')
-  Dir[File.join('*', '*.gemspec')].each do |gemspec|
-    system "gem build #{gemspec}"
-  end
-  system "gem build xenon.gemspec"
   FileUtils.mkdir_p('pkg')
+
+  Dir[File.join('*', '*.gemspec')].each do |gemspec|
+    Dir.chdir(File.dirname(gemspec)) do
+      system "gem build #{File.basename(gemspec)}"
+      FileUtils.mv(Dir['*.gem'], '../pkg')
+    end
+  end
+
+  system "gem build xenon.gemspec"
   FileUtils.mv(Dir['*.gem'], 'pkg')
 end
 
