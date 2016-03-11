@@ -60,12 +60,12 @@ end
 
 ~~~
 
-Of course, it does all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found. For example, if you try to `POST` to the above code you'll see the error:
+Of course, it does all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found. For example, if you try to `PUT` to the above code you'll see the error:
 
 ~~~json
 {
   "status": 405,
-  "developer_message": "Supported methods: GET"
+  "developer_message": "Supported methods: GET, POST"
 }
 ~~~
 

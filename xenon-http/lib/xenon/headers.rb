@@ -41,7 +41,13 @@ module Xenon
       self
     end
 
-    %i(set add).each do |name|
+    def remove!(header)
+      header = header.name if header.respond_to?(:name)
+      @hash.delete(header)
+      self
+    end
+
+    %i(set add remove).each do |name|
       define_method name do |header|
         dup.send("#{name}!", header)
       end

@@ -1,16 +1,9 @@
 clearing :on
 
-guard :rspec, cmd: "bundle exec rspec" do
-  require "guard/rspec/dsl"
-  dsl = Guard::RSpec::Dsl.new(self)
-
-  # RSpec files
-  rspec = dsl.rspec
-  watch(rspec.spec_helper) { rspec.spec_dir }
-  watch(rspec.spec_support) { rspec.spec_dir }
-  watch(rspec.spec_files)
-
-  # Ruby files
-  ruby = dsl.ruby
-  dsl.watch_spec_files_for(ruby.lib_files)
+guard :rspec, cmd: 'bundle exec rspec', spec_paths: ['xenon-http/spec', 'xenon-routing/spec'] do
+  %w(http routing).each do |lib|
+    watch(%r{^xenon-#{lib}/spec/.+_spec\.rb$})
+    watch(%r{^xenon-#{lib}/lib/(.+)\.rb$}) { |m| "xenon-#{lib}/spec/lib/#{m[1]}_spec.rb" }
+    watch('xenon-#{lib}/spec/spec_helper.rb') { 'spec' }
+  end
 end

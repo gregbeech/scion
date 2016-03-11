@@ -94,7 +94,7 @@ describe Xenon::MediaType do
       expect(mt.to_s).to eq('text/plain; format=flowed; paged')
     end
   end
-  
+
 end
 
 describe Xenon::MediaRange do

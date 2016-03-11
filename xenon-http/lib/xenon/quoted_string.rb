@@ -7,13 +7,13 @@ module Xenon
       end
 
       def unquote
-      	qs = start_with?('"') && end_with?('"') ? self[1..-2] : self
-      	qs.gsub(/\\(.)/, '\1')
+        qs = start_with?('"') && end_with?('"') ? self[1..-2] : self
+        qs.gsub(/\\(.)/, '\1')
       end
 
       def uncomment
-      	qs = start_with?('(') && end_with?(')') ? self[1..-2] : self
-      	qs.gsub(/\\(.)/, '\1')
+        qs = start_with?('(') && end_with?(')') ? self[1..-2] : self
+        qs.gsub(/\\(.)/, '\1')
       end
     end
   end

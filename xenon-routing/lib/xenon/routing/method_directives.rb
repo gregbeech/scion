@@ -5,9 +5,9 @@ module Xenon
     module MethodDirectives
       include RouteDirectives
 
-      def request_method(method)
+      def request_method(*methods)
         extract_request do |request|
-          if request.request_method == method
+          if methods.include?(request.request_method)
             yield
           else
             reject Rejection.new(:method, { supported: method })
@@ -15,7 +15,13 @@ module Xenon
         end
       end
 
-      %i(delete get head options patch post put).each do |method|
+      def get
+        request_method :get, :head do
+          yield
+        end
+      end
+
+      %i(delete head options patch post put).each do |method|
         define_method(method) do |&inner|
           request_method(method, &inner)
         end

@@ -71,9 +71,14 @@ module Xenon
       end
 
       response_marshaller ||= self.class.marshallers.first
-      resp = @context.response.copy(
-        headers: @context.response.headers.set(Headers::ContentType.new(response_marshaller.content_type)),
-        body: response_marshaller.marshal(@context.response.body))
+      headers = @context.response.headers.set(Headers::ContentType.new(response_marshaller.content_type))
+      if @context.request.allow_response_body?
+        body = response_marshaller.marshal(@context.response.body)
+      else
+        # TODO: Suppress the Content-Lenth heder
+        body = []
+      end
+      resp = @context.response.copy(headers: headers, body: body)
       [resp.status, resp.headers.map { |h| [h.name, h.to_s] }.to_h, resp.body]
     end
 

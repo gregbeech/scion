@@ -5,14 +5,22 @@
 # http://docs.codeclimate.com/article/296-engines-available-engines
 
 engines:
+  duplication:
+    enabled: true
+  fixme:
+    enabled: true
   rubocop:
+    enabled: true
+  rubymotion:
     enabled: true
 
 ratings:
   paths:
-    - lib/**/*
+    - xenon-http/lib/**/*
+    - xenon-routing/lib/**/*
 
 exclude_paths:
   - examples/**/*
-  - spec/**/*
+  - xenon-http/spec/**/*
+  - xenon-routing/spec/**/*
   - vendor/**/*

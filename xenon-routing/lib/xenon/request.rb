@@ -40,5 +40,9 @@ module Xenon
       changes.each { |k, v| r.instance_variable_set("@#{k}", v.freeze) }
       r
     end
+
+    def allow_response_body?
+      request_method != :head
+    end
   end
 end

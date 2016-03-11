@@ -1,4 +1,5 @@
 require 'xenon/etag'
+require 'xenon/errors'
 
 describe Xenon::ETag do
   let(:strong1) { described_class.new('1') }

@@ -8,11 +8,11 @@ module Xenon
     # Initializes a new ETag instance.
     # @param tag [String] The opaque tag.
     # @param weak [true, false] Whether the tag is weak.
-  	def initialize(tag, weak: false)
+    def initialize(tag, weak: false)
       @tag = tag
       @weak = weak
       freeze
-  	end
+    end
 
     # Prevents further modifications to the ETag.
     # @return [ETag] This method returns self.
@@ -33,9 +33,9 @@ module Xenon
 
     # Whether the ETag is weak.
     # @return [true, false] `true` if the ETag is weak; otherwise `false`.
-  	def weak?
-  	  @weak
-  	end
+    def weak?
+      @weak
+    end
 
     # Whether the ETag is strong.
     # @return [true, false] `true` if the ETag is strong; otherwise `false`.
