@@ -63,7 +63,25 @@ class HelloWorld < Xenon::API
 end
 ~~~
 
-Of course, it does all the things you'd expect like support content negotiation properly and return the correct status codes when paths or methods aren't found. For example, if you try to `PUT` to the above code you'll see the error:
+Authentication and authorisation are split so if you don't pass an auth token, or pass a badly formed token that can't be read as Basic credentials, you'll be unauthorised:
+
+~~~json
+{
+  "status": 401,
+  "developer_message": "Unauthorized"
+}
+~~~
+
+Whereas if you pass well a well-formed token with a username that isn't "greg" and you'll be forbidden:
+
+~~~json
+{
+  "status": 403,
+  "developer_message": "Forbidden"
+}
+~~~
+
+And, of course, it does all the things you'd expect from a decent API library like content negotiation and returning the correct status codes when paths or methods aren't found. For example, if you try to `PUT` you'll see the error:
 
 ~~~json
 {
