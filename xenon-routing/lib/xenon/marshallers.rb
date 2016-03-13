@@ -27,7 +27,14 @@ module Xenon
     end
 
     def unmarshal(body, as:)
-      as ? as.new.from_json(body.read) : JSON.load(body)
+      s = body.read
+      if as.nil?
+        JSON.parse(s)
+      elsif as.method_defined?(:from_json)
+        as.new.from_json(s)
+      else
+        as.new(JSON.parse(s, symbolize_names: true))
+      end
     end
   end
 

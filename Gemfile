@@ -14,6 +14,7 @@ group :development, :test do
   gem 'guard-rspec', require: false
   gem 'thin', require: false
   gem 'yard', require: false
+  gem 'google-protobuf', '>= 3.0.0.alpha', require: false
 end
 
 group :development do

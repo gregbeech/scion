@@ -14,7 +14,9 @@ module Xenon
     end
 
     def self.decode(s)
-      str = Base64.strict_decode64(s)
+      # set encoding to ASCII rather than the default ASCII_8BIT as these are really text
+      # rather than binary values and some libraries get upset if it's the 8BIT variant
+      str = Base64.strict_decode64(s).force_encoding(Encoding::ASCII)
       username, password = str.split(':', 2)
       BasicCredentials.new(username, password)
     end
