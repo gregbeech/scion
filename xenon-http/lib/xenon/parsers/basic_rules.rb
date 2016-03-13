@@ -11,6 +11,14 @@ module Xenon
         @values = values
       end
 
+      def first
+        @values.first
+      end
+
+      def last
+        @values.last
+      end
+
       def to_a
         @values
       end

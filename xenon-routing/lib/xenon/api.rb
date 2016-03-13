@@ -129,6 +129,8 @@ module Xenon
         case rejection.reason
         when :accept
           fail_with 406, "Supported media types: #{rejection[:supported].join(', ')}"
+        when :cookie
+          fail_with 400, "Missing required cookies: #{Array(rejection[:required]).join(', ')}"
         when :forbidden
           fail_with 403
         when :header

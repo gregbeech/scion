@@ -18,8 +18,11 @@ module Xenon
     end
 
     def param_hash
-      puts "GET = #{@rack_req.GET.inspect}"
       @param_hash ||= @rack_req.GET.with_indifferent_access.freeze
+    end
+
+    def cookie(name)
+      @rack_req.cookies[name]
     end
 
     def header(name)

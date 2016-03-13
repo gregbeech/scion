@@ -73,6 +73,14 @@ module Xenon
           def self.inherited(base)
             Headers.register(base)
           end
+
+          def self.parse(s)
+            base_name = name.demodulize
+            tree = Xenon::Parsers.const_get("#{base_name}Header").new.parse(s) # TODO: HeaderParser would be better
+            Xenon::Parsers.const_get("#{base_name}HeaderTransform").new.apply(tree)
+          rescue Parslet::ParseFailed
+            raise Xenon::ParseError
+          end
         end
         Headers.const_set("#{name.tr('-', '_').classify}Header", klass)
         klass.const_set(:NAME, name)

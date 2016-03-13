@@ -6,19 +6,11 @@ module Xenon
       include RouteDirectives
 
       def optional_header(name)
-        extract_request do |request|
-          yield request.header(name)
-        end
+        optional_header(name, &proc)
       end
 
       def header(name)
-        optional_header(name) do |value|
-          if value
-            yield value
-          else
-            reject Rejection.new(:header, { required: name })
-          end
-        end
+        headers(name, &proc)
       end
 
       def optional_headers(*names)
@@ -30,7 +22,7 @@ module Xenon
       def headers(*names)
         optional_headers(*names) do |values|
           if values.all?
-            yield values
+            yield *values
           else
             reject Rejection.new(:header, { required: names })
           end
