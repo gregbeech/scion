@@ -22,6 +22,8 @@ class Salutation
 end
 
 class HelloWorld < Xenon::API
+  use Rack::MethodOverride
+
   path '/' do
     hello_auth do |user|
       get do

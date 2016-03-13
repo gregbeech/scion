@@ -30,7 +30,7 @@ module Xenon
         context.rejections << rejection
       end
 
-      def fail(status, developer_message = nil)
+      def fail_with(status, developer_message = nil)
         body = {
           status: status,
           developer_message: developer_message || Rack::Utils::HTTP_STATUS_CODES[status]

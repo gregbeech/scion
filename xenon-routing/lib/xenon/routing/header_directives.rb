@@ -21,6 +21,22 @@ module Xenon
         end
       end
 
+      def optional_headers(*names)
+        extract_request do |request|
+          yield names.map { |name| request.header(name) }
+        end
+      end
+
+      def headers(*names)
+        optional_headers(*names) do |values|
+          if values.all?
+            yield values
+          else
+            reject Rejection.new(:header, { required: names })
+          end
+        end
+      end
+
       def respond_with_header(header)
         map_response -> r { r.copy(headers: r.headers.add(header)) } do
           yield

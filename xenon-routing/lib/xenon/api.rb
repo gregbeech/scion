@@ -30,8 +30,33 @@ module Xenon
     attr_reader :context
 
     class << self
+      alias_method :new!, :new unless method_defined? :new!
+
+      def new
+        instance = new!
+        build(instance).to_app
+      end
+
+      # Creates a Rack::Builder instance with all the middleware set up and
+      # the given +app+ as end point.
+      def build(app)
+        builder = Rack::Builder.new
+        builder.use Rack::Head
+        middleware.each { |mw, a, b| builder.use(mw, *a, &b) }
+        builder.run app
+        builder
+      end
+
       def routes
         @routes ||= []
+      end
+
+      def middleware
+        @middleware ||= []
+      end
+
+      def use(mw, *args, &block)
+        middleware << [mw, args, block]
       end
 
       def method_missing(name, *args, &block)
@@ -64,61 +89,64 @@ module Xenon
           else
             reject :accept, supported: self.class.marshallers.map(&:media_type)
           end
-          handle_rejections(@context.rejections)
-        rescue => e
-          handle_error(e)
+          handle_rejections { |r| default_rejection_handler(r) }
+        rescue => error
+          handle_error(error) { |e| default_error_handler(e) }
         end
       end
 
       response_marshaller ||= self.class.marshallers.first
       headers = @context.response.headers.set(Headers::ContentType.new(response_marshaller.content_type))
-      if @context.request.allow_response_body?
-        body = response_marshaller.marshal(@context.response.body)
-      else
-        # TODO: Suppress the Content-Lenth heder
-        body = []
-      end
+      body = response_marshaller.marshal(@context.response.body)
       resp = @context.response.copy(headers: headers, body: body)
       [resp.status, resp.headers.map { |h| [h.name, h.to_s] }.to_h, resp.body]
     end
 
-    def handle_error(e)
-      puts "handle_error: #{e.class}: #{e}\n  #{e.backtrace.join("\n  ")}"
-      case e
+    def handle_error(error, &handler)
+      handler.call(error)
+    end
+
+    def handle_rejections(&handler)
+      handler.call(@context.rejections)
+    end
+
+    def default_error_handler(error)
+      puts "handle_error: #{error.class}: #{e}\n  #{error.backtrace.join("\n  ")}"
+      case error
       when ParseError
-        fail 400, e.message
+        fail_with 400, e.message
       else
-        fail 500, e.message # TODO: Only if verbose errors configured
+        fail_with 500, e.message # TODO: Only if verbose errors configured
       end
     end
 
-    def handle_rejections(rejections)
+    def default_rejection_handler(rejections)
       puts "handle_rejections: #{rejections}"
       if rejections.empty?
-        fail 404
+        fail_with 404
       else
         rejection = rejections.first
         case rejection.reason
         when :accept
-          fail 406, "Supported media types: #{rejection[:supported].join(", ")}"
+          fail_with 406, "Supported media types: #{rejection[:supported].join(', ')}"
         when :forbidden
-          fail 403
+          fail_with 403
         when :header
-          fail 400, "Missing required header: #{rejection[:required]}"
+          fail_with 400, "Missing required headers: #{Array(rejection[:required]).join(', ')}"
         when :method
           supported = rejections.take_while { |r| r.reason == :method }.flat_map { |r| r[:supported] }
-          fail 405, "Supported methods: #{supported.map(&:upcase).join(", ")}"
+          fail_with 405, "Supported methods: #{supported.map(&:upcase).join(', ')}"
         when :unauthorized
           if rejection[:scheme]
             challenge = Headers::Challenge.new(rejection[:scheme], rejection.info.except(:scheme))
             respond_with_header Headers::WWWAuthenticate.new(challenge) do
-              fail 401
+              fail_with 401
             end
           else
-            fail 401
+            fail_with 401
           end
         else
-          fail 500
+          fail_with 500
         end
       end
     end

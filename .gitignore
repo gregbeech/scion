@@ -21,5 +21,3 @@ Gemfile.lock
 ## Environment normalisation:
 /.bundle/
 /lib/bundler/man/
-.ruby-gemset
-.ruby-version
