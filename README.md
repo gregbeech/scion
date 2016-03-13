@@ -32,7 +32,7 @@ class HelloWorld < Xenon::API
   path '/' do
     hello_auth do |user|
       get do
-        params :greeting do |greeting|
+        params greeting: { type: String, default: 'hello' } do |greeting|
           complete :ok, Salutation.new(greeting: greeting, username: user.username)
         end
       end

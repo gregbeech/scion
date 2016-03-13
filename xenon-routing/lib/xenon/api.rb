@@ -111,12 +111,12 @@ module Xenon
     end
 
     def default_error_handler(error)
-      puts "handle_error: #{error.class}: #{e}\n  #{error.backtrace.join("\n  ")}"
+      puts "handle_error: #{error.class}: #{error}\n  #{error.backtrace.join("\n  ")}"
       case error
       when ParseError
-        fail_with 400, e.message
+        fail_with 400, error.message
       else
-        fail_with 500, e.message # TODO: Only if verbose errors configured
+        fail_with 500, error.message # TODO: Only if verbose errors configured
       end
     end
 
