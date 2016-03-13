@@ -5,8 +5,6 @@
 # http://docs.codeclimate.com/article/296-engines-available-engines
 
 engines:
-  bundler-audit:
-    enabled: true
   duplication:
     enabled: true
     config:
@@ -21,7 +19,6 @@ engines:
 
 ratings:
   paths:
-    - Gemfile.lock
     - xenon-http/lib/**/*
     - xenon-routing/lib/**/*
 
