@@ -3,8 +3,8 @@ source 'https://rubygems.org'
 gemspec
 
 Dir[File.join('*', '*.gemspec')].each do |gemspec|
-  lib = gemspec.scan(/xenon-(.*)\.gemspec/).flatten.first
-  gemspec(name: "xenon-#{lib}", development_group: lib)
+  lib = gemspec.scan(/(.*)\.gemspec/).flatten.first
+  gemspec(name: lib, development_group: lib)
 end
 
 group :development, :test do
@@ -15,6 +15,7 @@ group :development, :test do
   gem 'thin', require: false
   gem 'yard', require: false
   gem 'google-protobuf', '>= 3.0.0.alpha', require: false
+  gem 'rack-test'
 end
 
 group :development do
@@ -22,5 +23,5 @@ group :development do
 end
 
 group :test do
-  gem "codeclimate-test-reporter", require: false
+  gem 'codeclimate-test-reporter', require: false
 end
